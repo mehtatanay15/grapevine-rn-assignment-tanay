@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -15,8 +15,8 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import { RootNavigator } from '@/navigation/root-navigator';
 
-// Keep native splash visible until fonts are ready
-SplashScreen.preventAutoHideAsync();
+// Hide native splash immediately — the custom SplashScreen component handles the branded intro
+SplashScreen.hideAsync().catch(() => {});
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -27,18 +27,12 @@ export default function App() {
     Inter_700Bold,
   });
 
-  const onLayoutRootView = useCallback(async () => {
-    if (fontsLoaded) {
-      await SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
-
   if (!fontsLoaded) {
     return <View style={styles.root} />;
   }
 
   return (
-    <GestureHandlerRootView style={styles.root} onLayout={onLayoutRootView}>
+    <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <NavigationContainer>
           <RootNavigator />
