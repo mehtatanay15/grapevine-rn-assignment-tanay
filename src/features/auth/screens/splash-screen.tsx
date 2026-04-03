@@ -1,5 +1,12 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming, 
+  withDelay,
+  Easing 
+} from 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 
 import { colors } from '@/theme/colors';
@@ -9,22 +16,35 @@ import type { AuthScreenProps } from '@/navigation/types';
 type Props = AuthScreenProps<'Splash'>;
 
 export function SplashScreen({ navigation }: Props) {
+  const opacity = useSharedValue(0);
+  const scale = useSharedValue(0.9);
+
   useEffect(() => {
+    // Initial animation
+    opacity.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.quad) });
+    scale.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.back(1.5)) });
+
+    // Navigate after a delay
     const timer = setTimeout(() => {
       navigation.replace('Welcome');
-    }, 2000);
+    }, 2500);
     return () => clearTimeout(timer);
-  }, [navigation]);
+  }, [navigation, opacity, scale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
 
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
-      <View style={styles.logoContainer}>
+      <Animated.View style={[styles.logoContainer, animatedStyle]}>
         <AppText variant="display" style={styles.logoText}>
           Ready!
         </AppText>
         <View style={styles.dot} />
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -42,15 +62,16 @@ const styles = StyleSheet.create({
   },
   logoText: {
     color: colors.primary,
-    fontSize: 48,
-    letterSpacing: -1,
+    fontSize: 56,
+    letterSpacing: -1.5,
+    fontWeight: '800',
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: colors.primary,
-    marginTop: 4,
-    opacity: 0,
+    marginTop: -8,
+    alignSelf: 'center',
   },
 });

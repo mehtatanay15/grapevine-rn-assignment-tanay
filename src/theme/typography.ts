@@ -24,14 +24,17 @@ export const typography = {
   },
 
   sizes: {
-    xs: 11,
-    s: 13,
-    m: 15,
-    l: 17,
+    xxxs: 9,
+    xxs: 11,
+    xs: 12,
+    s: 14,
+    m: 16,
+    l: 18,
     xl: 20,
     xxl: 24,
-    xxxl: 30,
-    display: 36,
+    xxxl: 32,
+    display: 44,
+    giga: 56,
   },
 } as const;
 

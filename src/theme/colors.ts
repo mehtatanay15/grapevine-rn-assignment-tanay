@@ -4,7 +4,6 @@
  * Use these tokens throughout your components.
  * Do NOT use hardcoded hex values in component files.
  */
-
 export const palette = {
   // Brand
   orange10: "#FFF7ED",
@@ -15,24 +14,26 @@ export const palette = {
   orange60: "#EA580C",
   orange70: "#C2410C",
 
-  // Greens (used on Feedback / Highlights screens)
+  // Greens
   green10: "#F0FDF4",
   green20: "#DCFCE7",
   green30: "#86EFAC",
   green40: "#4ADE80",
   green50: "#22C55E",
   green60: "#16A34A",
+  green90: "#064E3B",
 
-  // Grays
-  gray10: "#F9FAFB",
-  gray20: "#F3F4F6",
-  gray30: "#E5E7EB",
-  gray40: "#D1D5DB",
-  gray50: "#9CA3AF",
-  gray60: "#6B7280",
-  gray70: "#4B5563",
-  gray80: "#374151",
-  gray90: "#1F2937",
+  // Slate (New cleaner grays)
+  slate50: "#F8FAFC",
+  slate100: "#F1F5F9",
+  slate200: "#E2E8F0",
+  slate300: "#CBD5E1",
+  slate400: "#94A3B8",
+  slate500: "#64748B",
+  slate600: "#475569",
+  slate700: "#334155",
+  slate800: "#1E293B",
+  slate900: "#0F172A",
 
   // Utility
   white: "#FFFFFF",
@@ -43,9 +44,8 @@ export const palette = {
 export const colors = {
   // Backgrounds
   background: palette.white,
-  backgroundSecondary: palette.gray10,
+  backgroundSecondary: palette.slate50,
   backgroundFeedback: palette.green10,
-  backgroundHighlights: palette.green10,
 
   // Brand
   primary: palette.orange50,
@@ -53,31 +53,32 @@ export const colors = {
   primaryDark: palette.orange60,
 
   // Text
-  textPrimary: palette.gray90,
-  textSecondary: palette.gray60,
-  textDisabled: palette.gray40,
+  textPrimary: palette.slate900,
+  textSecondary: palette.slate600,
+  textTertiary: palette.slate400,
+  textDisabled: palette.slate300,
   textInverse: palette.white,
   textLink: palette.orange50,
 
   // Border
-  border: palette.gray30,
+  border: palette.slate200,
+  borderStrong: palette.slate300,
   borderFocused: palette.orange50,
 
-  // Feedback / status
-  success: palette.green50,
+  // Status
+  success: palette.green60,
   successLight: palette.green10,
+  successDark: palette.green90,
   error: "#EF4444",
   errorLight: "#FEF2F2",
 
-  // Cards
-  cardBackground: palette.white,
-  cardBorder: palette.gray30,
-
-  // Button
+  // Interactive
   buttonPrimary: palette.orange50,
   buttonPrimaryText: palette.white,
-  buttonDisabled: palette.gray30,
-  buttonDisabledText: palette.gray50,
+  buttonSecondary: palette.slate100,
+  buttonSecondaryText: palette.slate800,
+  buttonDisabled: palette.slate200,
+  buttonDisabledText: palette.slate400,
 } as const;
 
 export type Colors = typeof colors;
