@@ -1,323 +1,234 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-
-import { colors, palette } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
-import { typography } from '@/theme/typography';
-import { AppText } from '@/components/ui/app-text';
-import { Button } from '@/components/ui/button';
-import { SafeScreen } from '@/components/ui/safe-screen';
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { MainTabScreenProps, RootStackParamList } from '@/navigation/types';
-import type { User } from '@/features/settings/types';
 
-import userData from '@/mock-data/user.json';
+import { typography } from '@/theme/typography';
+import { AppText } from '@/components/ui/app-text';
+import { SafeScreen } from '@/components/ui/safe-screen';
+import type { MainTabScreenProps, RootStackParamList } from '@/navigation/types';
 
 type Props = MainTabScreenProps<'Settings'>;
 
-interface MenuItemProps {
-  icon: React.ReactNode;
-  label: string;
-  value?: string;
-  onPress: () => void;
-  isDestructive?: boolean;
-}
-
-function MenuItem({ icon, label, value, onPress, isDestructive = false }: MenuItemProps) {
-  return (
-    <TouchableOpacity
-      style={styles.menuItem}
-      onPress={onPress}
-      activeOpacity={0.7}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-    >
-      <View style={styles.menuIconContainer}>{icon}</View>
-      <View style={styles.menuTextContainer}>
-        <AppText
-          variant="bodyMd"
-          style={[styles.menuLabel, isDestructive && styles.menuLabelDestructive]}
-        >
-          {label}
-        </AppText>
-        {value && (
-          <AppText variant="caption" style={styles.menuValue}>
-            {value}
-          </AppText>
-        )}
-      </View>
-      {!isDestructive && (
-        <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-      )}
-    </TouchableOpacity>
-  );
-}
-
 export function SettingsScreen({ navigation }: Props) {
-  const user: User = userData as User;
   const rootNav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const handleLogOut = () => {
-    rootNav.reset({ index: 0, routes: [{ name: 'Auth' }] });
-  };
-
   return (
-    <SafeScreen>
+    <SafeScreen style={styles.safeArea}>
       <StatusBar style="dark" />
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ── Header ── */}
-        <View style={styles.pageHeader}>
-          <AppText variant="h2">Settings</AppText>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => rootNav.goBack()}
+          style={styles.backButton}
+        >
+          <Ionicons name="chevron-back" size={24} color="#8E8E93" />
+        </TouchableOpacity>
+        <AppText style={styles.headerTitle}>Your Profile</AppText>
+        <View style={styles.headerRightSpacer} />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <Image 
+          source={require('../../../../assets/images/Settings/Card.png')}
+          style={styles.heroCard}
+          contentFit="contain"
+          cachePolicy="memory-disk"
+        />
+
+        {/* Update Box */}
+        <View style={styles.updateBox}>
+          <View style={styles.updateLeft}>
+            <Image source={require('../../../../assets/images/Settings/elements.png')} style={{width: 20, height: 20}} contentFit="contain" />
+            <AppText style={styles.menuLabel}>New update available</AppText>
+          </View>
+          <Image source={require('../../../../assets/images/Settings/new-update.png')} style={{width: 32, height: 32}} contentFit="contain" />
         </View>
 
-        {/* ── Trial Banner ── */}
-        <View style={styles.trialBanner}>
-          <View style={styles.trialContent}>
-            <AppText variant="h3" style={styles.trialTitle}>
-              3 days free trial
-            </AppText>
-            <AppText variant="h2" style={styles.trialPrice}>
-              for ₹1
-            </AppText>
-            <TouchableOpacity
-              style={styles.trialButton}
-              activeOpacity={0.8}
-              accessibilityRole="button"
-              accessibilityLabel="Start free trial"
-            >
-              <AppText variant="labelMd" style={styles.trialButtonText}>
-                Try Now
-              </AppText>
-            </TouchableOpacity>
+        {/* User Info Container */}
+        <View style={styles.listContainer}>
+          <View style={styles.rowItem}>
+            <View style={styles.rowLeft}>
+              <Image source={require('../../../../assets/images/Settings/phone.png')} style={{width: 20, height: 20}} contentFit="contain" />
+              <AppText style={styles.menuLabel}>Phone number</AppText>
+            </View>
+            <AppText style={styles.menuValue}>+91 9608184703</AppText>
           </View>
-          <View style={styles.trialIllustration}>
-            <AppText style={styles.trialEmoji}>🎯</AppText>
-          </View>
-        </View>
-
-        {/* ── Profile card ── */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <AppText variant="h2" style={styles.avatarEmoji}>
-              🧑
-            </AppText>
-          </View>
-          <View style={styles.profileInfo}>
-            <AppText variant="h3" style={styles.userName}>
-              {user.name}
-            </AppText>
-            <AppText variant="bodyMd" style={styles.userPhone}>
-              {user.phone}
-            </AppText>
+          <View style={styles.divider} />
+          <View style={styles.rowItem}>
+            <View style={styles.rowLeft}>
+              <Image source={require('../../../../assets/images/Settings/learning-since.png')} style={{width: 20, height: 20}} contentFit="contain" />
+              <AppText style={styles.menuLabel}>Learning since</AppText>
+            </View>
+            <AppText style={styles.menuValue}>August 17, 2025</AppText>
           </View>
         </View>
 
-        {/* ── Menu section ── */}
-        <View style={styles.menuSection}>
-          <MenuItem
-            icon={<Ionicons name="sparkles-outline" size={20} color={colors.primary} />}
-            label="New update available"
-            onPress={() => {}}
-          />
-          <View style={styles.menuDivider} />
-          <MenuItem
-            icon={<Ionicons name="call-outline" size={20} color={colors.textSecondary} />}
-            label="Phone number"
-            value={user.phone}
-            onPress={() => {}}
-          />
-          <View style={styles.menuDivider} />
-          <MenuItem
-            icon={<Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />}
-            label="Learning since"
-            value="April 2026"
-            onPress={() => {}}
-          />
-          <View style={styles.menuDivider} />
-          <MenuItem
-            icon={<Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />}
-            label="Chat with us"
-            onPress={() => {}}
-          />
-          <View style={styles.menuDivider} />
-          <MenuItem
-            icon={
-              <MaterialCommunityIcons
-                name="share-variant-outline"
-                size={20}
-                color={colors.textSecondary}
-              />
-            }
-            label="Share the app"
-            onPress={() => {}}
-          />
+        {/* Actions Container */}
+        <View style={styles.listContainer}>
+          <TouchableOpacity style={styles.rowItemBtn}>
+            <View style={styles.rowLeft}>
+              <Image source={require('../../../../assets/images/Settings/comments-2.png')} style={{width: 20, height: 20}} contentFit="contain" />
+              <AppText style={styles.menuLabel}>Chat with us</AppText>
+            </View>
+            <Image source={require('../../../../assets/images/Settings/chevron-right.png')} style={{width: 16, height: 16}} contentFit="contain" />
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity style={styles.rowItemBtn}>
+            <View style={styles.rowLeft}>
+              <Image source={require('../../../../assets/images/Settings/export-2.png')} style={{width: 20, height: 20}} contentFit="contain" />
+              <AppText style={styles.menuLabel}>Share the app</AppText>
+            </View>
+            <Image source={require('../../../../assets/images/Settings/chevron-right.png')} style={{width: 16, height: 16}} contentFit="contain" />
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity style={styles.rowItemBtn}>
+            <View style={styles.rowLeft}>
+              <Image source={require('../../../../assets/images/Settings/star.png')} style={{width: 20, height: 20}} contentFit="contain" />
+              <AppText style={styles.menuLabel}>Rate the app</AppText>
+            </View>
+            <Image source={require('../../../../assets/images/Settings/chevron-right.png')} style={{width: 16, height: 16}} contentFit="contain" />
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity style={styles.rowItemBtn} onPress={() => rootNav.reset({ index: 0, routes: [{ name: 'Auth' }] })}>
+            <View style={styles.rowLeft}>
+              <Image source={require('../../../../assets/images/Settings/log-out.png')} style={{width: 20, height: 20}} contentFit="contain" />
+              <AppText style={styles.menuLabel}>Log out</AppText>
+            </View>
+            <Image source={require('../../../../assets/images/Settings/chevron-right.png')} style={{width: 16, height: 16}} contentFit="contain" />
+          </TouchableOpacity>
         </View>
 
-        {/* ── Log Out ── */}
-        <View style={styles.logoutSection}>
-          <MenuItem
-            icon={<Ionicons name="log-out-outline" size={20} color={colors.error} />}
-            label="Log Out"
-            onPress={handleLogOut}
-            isDestructive
-          />
+        {/* Footer */}
+        <View style={styles.footerInfo}>
+          <AppText style={styles.footerText}>App version v2.14.2</AppText>
+          <AppText style={styles.footerText}>Made with ❤️ from India</AppText>
         </View>
 
-        {/* App version */}
-        <AppText variant="caption" style={styles.versionText}>
-          Ready! v1.0.0
-        </AppText>
       </ScrollView>
     </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    paddingBottom: spacing.xxxl,
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F5F5F8',
   },
-  pageHeader: {
-    paddingHorizontal: spacing.screenPadding,
-    paddingTop: spacing.m,
-    paddingBottom: spacing.m,
-  },
-  // ── Trial Banner ──
-  trialBanner: {
-    marginHorizontal: spacing.screenPadding,
-    marginBottom: spacing.m,
-    backgroundColor: colors.primary,
-    borderRadius: spacing.cardRadius,
-    padding: spacing.l,
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    overflow: 'hidden',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 24,
   },
-  trialContent: {
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+  },
+  headerTitle: {
     flex: 1,
-    gap: spacing.xxs,
-  },
-  trialTitle: {
-    color: colors.textInverse,
+    textAlign: 'center',
     fontFamily: typography.fonts.inter.semiBold,
+    fontSize: 18,
+    color: '#1C1C1E',
   },
-  trialPrice: {
-    color: colors.textInverse,
-    fontFamily: typography.fonts.inter.bold,
-    marginBottom: spacing.s,
+  headerRightSpacer: {
+    width: 40,
   },
-  trialButton: {
-    backgroundColor: colors.background,
-    borderRadius: spacing.buttonRadius,
-    paddingHorizontal: spacing.l,
-    paddingVertical: spacing.xs,
-    alignSelf: 'flex-start',
-  },
-  trialButtonText: {
-    color: colors.primary,
-    fontFamily: typography.fonts.inter.bold,
-  },
-  trialIllustration: {
-    width: 80,
-    height: 80,
-    borderRadius: spacing.xxxl,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  trialEmoji: {
-    fontSize: 40,
+  heroCard: {
+    width: 361,
+    height: 200, 
+    marginBottom: 16,
   },
-  // ── Profile ──
-  profileCard: {
+  updateBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: spacing.screenPadding,
-    marginBottom: spacing.m,
-    padding: spacing.m,
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: spacing.cardRadius,
-    gap: spacing.m,
-  },
-  avatar: {
-    width: spacing.avatarSize + spacing.s,
-    height: spacing.avatarSize + spacing.s,
-    borderRadius: (spacing.avatarSize + spacing.s) / 2,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.border,
-  },
-  avatarEmoji: {
-    fontSize: 36,
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  userName: {
-    color: colors.textPrimary,
-    marginBottom: spacing.xxxs,
-  },
-  userPhone: {
-    color: colors.textSecondary,
-  },
-  // ── Menu ──
-  menuSection: {
-    marginHorizontal: spacing.screenPadding,
-    backgroundColor: colors.background,
-    borderRadius: spacing.cardRadius,
+    justifyContent: 'space-between',
+    width: 361,
+    height: 72,
+    paddingTop: 8,
+    paddingRight: 16,
+    paddingBottom: 8,
+    paddingLeft: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-    marginBottom: spacing.m,
+    borderColor: '#E5E5EA',
+    marginBottom: 16,
   },
-  menuItem: {
+  updateLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.m,
-    paddingHorizontal: spacing.m,
-    gap: spacing.m,
+    gap: 12,
   },
-  menuIconContainer: {
-    width: spacing.xl,
+  downloadCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#E8F9EF',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  menuTextContainer: {
-    flex: 1,
+  listContainer: {
+    width: 361,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    marginBottom: 16,
+    paddingVertical: 8,
+  },
+  rowItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  rowItemBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E5EA',
+    marginLeft: 48,
   },
   menuLabel: {
-    color: colors.textPrimary,
-  },
-  menuLabelDestructive: {
-    color: colors.error,
+    fontFamily: typography.fonts.inter.medium,
+    fontSize: 16,
+    color: '#2C2C2E',
   },
   menuValue: {
-    color: colors.textSecondary,
-    marginTop: spacing.xxxs,
+    fontFamily: typography.fonts.inter.normal,
+    fontSize: 16,
+    color: '#AEAEB2',
   },
-  menuDivider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginLeft: spacing.m + spacing.m + spacing.xl,
+  footerInfo: {
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 16,
   },
-  logoutSection: {
-    marginHorizontal: spacing.screenPadding,
-    backgroundColor: colors.background,
-    borderRadius: spacing.cardRadius,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-    marginBottom: spacing.m,
-  },
-  versionText: {
-    textAlign: 'center',
-    color: colors.textSecondary,
-    marginTop: spacing.s,
+  footerText: {
+    fontFamily: typography.fonts.inter.medium,
+    fontSize: 13,
+    color: 'rgba(0,0,0,0.64)',
   },
 });

@@ -215,24 +215,28 @@ function SocialProofBanner() {
 /* ─── Bottom Nav ────────────────────────────────────────────────────────────── */
 
 function BottomNav() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
   return (
     <View style={styles.bottomNavContainer}>
-      <ScalePressable scaleValue={0.96} accessibilityLabel="Home and Settings navigation">
-        <View style={styles.navCapsule}>
+      <View style={styles.navCapsule}>
+        <TouchableOpacity activeOpacity={0.8}>
           <Image 
             source={require('../../../../assets/images/Home-button.png')} 
             style={styles.navIcon} 
             contentFit="contain" 
             cachePolicy="memory-disk" 
           />
+        </TouchableOpacity>
+        <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate('Settings')}>
           <Image 
             source={require('../../../../assets/images/Settings-button.png')} 
             style={styles.navIcon} 
             contentFit="contain" 
             cachePolicy="memory-disk" 
           />
-        </View>
-      </ScalePressable>
+        </TouchableOpacity>
+      </View>
       
       <ScalePressable scaleValue={0.96} accessibilityLabel="Store navigation">
         <View style={styles.storeCapsule}>
