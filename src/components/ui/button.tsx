@@ -1,11 +1,17 @@
 import React from 'react';
 import {
-  TouchableOpacity,
+  View,
+  Pressable,
   StyleSheet,
   ActivityIndicator,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { colors, palette } from '@/theme/colors';
@@ -25,6 +31,14 @@ interface ButtonProps {
   accessibilityLabel?: string;
 }
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+const SHADOW_HEIGHT = 5;
+
+/**
+ * 3D Button — has a visible darker bottom edge that makes it look raised.
+ * On press, the button translates down and the shadow shrinks.
+ */
 export function Button({
   label,
   onPress,
@@ -34,58 +48,128 @@ export function Button({
   style,
   accessibilityLabel,
 }: ButtonProps) {
+  const translateY = useSharedValue(0);
+  const shadowHeight = useSharedValue(SHADOW_HEIGHT);
+
+  const animatedButtonStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const animatedShadowStyle = useAnimatedStyle(() => ({
+    height: shadowHeight.value,
+  }));
+
+  const handlePressIn = () => {
+    translateY.value = withSpring(SHADOW_HEIGHT - 1, { damping: 20, stiffness: 400 });
+    shadowHeight.value = withSpring(1, { damping: 20, stiffness: 400 });
+  };
+
+  const handlePressOut = () => {
+    translateY.value = withSpring(0, { damping: 15, stiffness: 300 });
+    shadowHeight.value = withSpring(SHADOW_HEIGHT, { damping: 15, stiffness: 300 });
+  };
+
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPress();
   };
 
-  const containerStyle = [
-    styles.base,
-    variant === 'primary' && styles.primary,
-    variant === 'outlined' && styles.outlined,
-    variant === 'dark' && styles.dark,
-    variant === 'ghost' && styles.ghost,
-    (disabled || loading) && styles.disabled,
-    style,
-  ];
+  const getShadowColor = () => {
+    if (disabled) return colors.buttonDisabled;
+    switch (variant) {
+      case 'primary':
+        return colors.buttonPrimaryShadow;
+      case 'dark':
+        return colors.buttonDarkShadow;
+      case 'outlined':
+        return colors.borderStrong;
+      default:
+        return palette.transparent;
+    }
+  };
 
   const textColor =
     variant === 'outlined'
       ? colors.primary
       : variant === 'ghost'
         ? colors.primary
-        : colors.textInverse;
+        : disabled
+          ? colors.buttonDisabledText
+          : colors.textInverse;
+
+  const show3D = variant !== 'ghost';
 
   return (
-    <TouchableOpacity
-      style={containerStyle}
-      onPress={handlePress}
-      disabled={disabled || loading}
-      activeOpacity={0.85}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? label}
-    >
-      {loading ? (
-        <ActivityIndicator color={textColor} />
-      ) : (
-        <AppText
-          variant="labelLg"
-          style={{ color: textColor, letterSpacing: variant === 'outlined' ? 1.5 : 0 }}
-        >
-          {label}
-        </AppText>
+    <View style={[styles.wrapper, style]}>
+      {/* Shadow layer (the darker bottom edge) */}
+      {show3D && (
+        <View
+          style={[
+            styles.shadowLayer,
+            {
+              backgroundColor: getShadowColor(),
+              borderRadius: spacing.buttonRadius,
+            },
+          ]}
+        />
       )}
-    </TouchableOpacity>
+
+      {/* Animated button surface */}
+      <AnimatedPressable
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onPress={handlePress}
+        disabled={disabled || loading}
+        style={[
+          styles.base,
+          variant === 'primary' && styles.primary,
+          variant === 'outlined' && styles.outlined,
+          variant === 'dark' && styles.dark,
+          variant === 'ghost' && styles.ghost,
+          disabled && styles.disabled,
+          animatedButtonStyle,
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel ?? label}
+      >
+        {loading ? (
+          <ActivityIndicator color={textColor} />
+        ) : (
+          <AppText
+            variant="labelLg"
+            style={{
+              color: textColor,
+              letterSpacing: variant === 'outlined' ? 1.5 : 0,
+              fontFamily: typography.fonts.inter.bold,
+            }}
+          >
+            {label}
+          </AppText>
+        )}
+      </AnimatedPressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    position: 'relative',
+  },
+  shadowLayer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 56 + SHADOW_HEIGHT,
+    borderRadius: spacing.buttonRadius,
+  },
   base: {
     height: 56,
     borderRadius: spacing.buttonRadius,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.xl,
+    zIndex: 1,
   },
   primary: {
     backgroundColor: colors.buttonPrimary,
@@ -96,12 +180,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   dark: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: colors.buttonDark,
   },
   ghost: {
     backgroundColor: palette.transparent,
   },
   disabled: {
-    opacity: 0.5,
+    backgroundColor: colors.buttonDisabled,
   },
 });

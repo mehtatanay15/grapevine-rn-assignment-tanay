@@ -1,10 +1,9 @@
 import React, { useCallback, useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Image } from 'expo-image';
+import { View, StyleSheet } from 'react-native';
+import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 
-import { colors } from '@/theme/colors';
+import { colors, palette } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import { AppText } from '@/components/ui/app-text';
@@ -24,7 +23,7 @@ export function QuestionBottomSheet({
   onFeedbackPress,
   onClose,
 }: QuestionBottomSheetProps) {
-  const snapPoints = useMemo(() => ['60%', '80%'], []);
+  const snapPoints = useMemo(() => ['55%'], []);
 
   const handleSheetChanges = useCallback(
     (index: number) => {
@@ -33,6 +32,18 @@ export function QuestionBottomSheet({
       }
     },
     [onClose],
+  );
+
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.4}
+      />
+    ),
+    [],
   );
 
   if (!question) return null;
@@ -44,48 +55,32 @@ export function QuestionBottomSheet({
       snapPoints={snapPoints}
       enablePanDownToClose
       onChange={handleSheetChanges}
+      backdropComponent={renderBackdrop}
       backgroundStyle={styles.sheetBackground}
       handleIndicatorStyle={styles.handle}
     >
       <BottomSheetView style={styles.content}>
-        {/* Close button */}
-        <TouchableOpacity
-          style={styles.closeButton}
-          onPress={onClose}
-          accessibilityRole="button"
-          accessibilityLabel="Close question detail"
-        >
-          <Ionicons name="close" size={20} color={colors.textPrimary} />
-        </TouchableOpacity>
-
-        {/* Question card (yellow pill) */}
+        {/* Yellow question card */}
         <View style={styles.questionCard}>
           <AppText variant="h3" style={styles.questionText}>
             {question.text}
           </AppText>
 
-          {/* Asked by row */}
-          <View style={styles.askedByRow}>
-            {question.companyLogoUrl ? (
-              <Image
-                source={{ uri: question.companyLogoUrl }}
-                style={styles.companyLogo}
-                cachePolicy="memory-disk"
-                contentFit="contain"
-                accessibilityLabel={`${question.companyName} logo`}
-              />
-            ) : (
-              <View style={[styles.companyLogo, styles.logoPlaceholder]}>
-                <AppText variant="labelSm" style={{ color: colors.textSecondary }}>
-                  {question.companyName.slice(0, 2).toUpperCase()}
+          {/* Asked by + duration row */}
+          <View style={styles.metaRow}>
+            <View style={styles.askedBySection}>
+              <View style={styles.companyLogoSmall}>
+                <AppText variant="labelSm" style={styles.logoText}>
+                  {question.companyName.slice(0, 2).toLowerCase()}
                 </AppText>
               </View>
-            )}
-            <AppText variant="bodyMd" style={styles.askedByText}>
-              Asked by {question.companyName}
-            </AppText>
+              <AppText variant="bodyMd" style={styles.askedByText}>
+                Asked by {question.companyName}
+              </AppText>
+            </View>
+
             <View style={styles.durationBadge}>
-              <Ionicons name="timer-outline" size={14} color={colors.textSecondary} />
+              <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
               <AppText variant="caption" style={styles.durationText}>
                 {question.durationMinutes} mins
               </AppText>
@@ -99,24 +94,28 @@ export function QuestionBottomSheet({
             label="FEEDBACK"
             onPress={onFeedbackPress}
             variant="outlined"
-            style={styles.actionButton}
             accessibilityLabel="View feedback for this question"
           />
           <Button
             label="🎧  AI VS AI (LISTEN)"
             onPress={() => {}}
             variant="dark"
-            style={styles.actionButton}
             accessibilityLabel="Listen to AI vs AI conversation"
           />
         </View>
 
         {/* Social proof */}
         <View style={styles.socialProof}>
-          <AppText variant="caption" style={styles.socialProofText}>
-            🏅 {question.completedTodayCount.toLocaleString()} users completed Question{' '}
-            {question.questionNumber} today 🏅
-          </AppText>
+          <View style={styles.socialBorder} />
+          <View style={styles.socialContent}>
+            <AppText variant="labelSm" style={styles.socialIcon}>🏅</AppText>
+            <AppText variant="caption" style={styles.socialText}>
+              {question.completedTodayCount.toLocaleString()} users completed Question{' '}
+              {question.questionNumber} today
+            </AppText>
+            <AppText variant="labelSm" style={styles.socialIcon}>🏅</AppText>
+          </View>
+          <View style={styles.socialBorder} />
         </View>
       </BottomSheetView>
     </BottomSheet>
@@ -126,29 +125,21 @@ export function QuestionBottomSheet({
 const styles = StyleSheet.create({
   sheetBackground: {
     backgroundColor: colors.background,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: spacing.bottomSheetRadius,
+    borderTopRightRadius: spacing.bottomSheetRadius,
   },
   handle: {
-    backgroundColor: colors.border,
-    width: 40,
+    backgroundColor: colors.borderStrong,
+    width: spacing.xxxl,
   },
   content: {
     paddingHorizontal: spacing.screenPadding,
-    paddingTop: spacing.m,
+    paddingTop: spacing.s,
     gap: spacing.m,
   },
-  closeButton: {
-    alignSelf: 'flex-end',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.backgroundSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  // ── Question Card ──
   questionCard: {
-    backgroundColor: '#F5C518',
+    backgroundColor: colors.sheetQuestionBg,
     borderRadius: spacing.cardRadius,
     padding: spacing.m,
     gap: spacing.m,
@@ -156,55 +147,71 @@ const styles = StyleSheet.create({
   questionText: {
     color: colors.textPrimary,
     lineHeight: 26,
+    fontFamily: typography.fonts.inter.semiBold,
   },
-  askedByRow: {
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  askedBySection: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
   },
-  companyLogo: {
+  companyLogoSmall: {
     width: 24,
     height: 24,
-    borderRadius: 12,
-  },
-  logoPlaceholder: {
+    borderRadius: spacing.s,
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border,
   },
+  logoText: {
+    color: colors.textSecondary,
+    fontSize: typography.sizes.xxs,
+  },
   askedByText: {
-    flex: 1,
     color: colors.textPrimary,
+    fontFamily: typography.fonts.inter.medium,
   },
   durationBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xxxs,
-    backgroundColor: 'rgba(0,0,0,0.08)',
-    paddingHorizontal: spacing.xs,
-    paddingVertical: spacing.xxxs,
-    borderRadius: spacing.xs,
   },
   durationText: {
     color: colors.textSecondary,
+    fontFamily: typography.fonts.inter.medium,
   },
+  // ── Actions ──
   actionsContainer: {
     gap: spacing.s,
   },
-  actionButton: {
-    width: '100%',
-  },
+  // ── Social Proof ──
   socialProof: {
-    alignItems: 'center',
-    paddingVertical: spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    borderStyle: 'dashed',
+    gap: spacing.xs,
   },
-  socialProofText: {
-    color: colors.primary,
-    fontFamily: typography.fonts.inter.semiBold,
+  socialBorder: {
+    height: 1,
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: colors.cardNextBorder,
+  },
+  socialContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
+  },
+  socialIcon: {
+    fontSize: typography.sizes.m,
+  },
+  socialText: {
+    color: colors.textSecondary,
+    fontFamily: typography.fonts.inter.medium,
   },
 });

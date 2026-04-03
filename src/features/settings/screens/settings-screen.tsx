@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { colors } from '@/theme/colors';
+import { colors, palette } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import { AppText } from '@/components/ui/app-text';
@@ -21,11 +21,12 @@ type Props = MainTabScreenProps<'Settings'>;
 interface MenuItemProps {
   icon: React.ReactNode;
   label: string;
+  value?: string;
   onPress: () => void;
   isDestructive?: boolean;
 }
 
-function MenuItem({ icon, label, onPress, isDestructive = false }: MenuItemProps) {
+function MenuItem({ icon, label, value, onPress, isDestructive = false }: MenuItemProps) {
   return (
     <TouchableOpacity
       style={styles.menuItem}
@@ -35,14 +36,21 @@ function MenuItem({ icon, label, onPress, isDestructive = false }: MenuItemProps
       accessibilityLabel={label}
     >
       <View style={styles.menuIconContainer}>{icon}</View>
-      <AppText
-        variant="bodyMd"
-        style={[styles.menuLabel, isDestructive && styles.menuLabelDestructive]}
-      >
-        {label}
-      </AppText>
+      <View style={styles.menuTextContainer}>
+        <AppText
+          variant="bodyMd"
+          style={[styles.menuLabel, isDestructive && styles.menuLabelDestructive]}
+        >
+          {label}
+        </AppText>
+        {value && (
+          <AppText variant="caption" style={styles.menuValue}>
+            {value}
+          </AppText>
+        )}
+      </View>
       {!isDestructive && (
-        <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+        <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
       )}
     </TouchableOpacity>
   );
@@ -50,11 +58,9 @@ function MenuItem({ icon, label, onPress, isDestructive = false }: MenuItemProps
 
 export function SettingsScreen({ navigation }: Props) {
   const user: User = userData as User;
-
   const rootNav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const handleLogOut = () => {
-    // Reset navigation stack to Auth so back button can't return
     rootNav.reset({ index: 0, routes: [{ name: 'Auth' }] });
   };
 
@@ -70,9 +76,33 @@ export function SettingsScreen({ navigation }: Props) {
           <AppText variant="h2">Settings</AppText>
         </View>
 
+        {/* ── Trial Banner ── */}
+        <View style={styles.trialBanner}>
+          <View style={styles.trialContent}>
+            <AppText variant="h3" style={styles.trialTitle}>
+              3 days free trial
+            </AppText>
+            <AppText variant="h2" style={styles.trialPrice}>
+              for ₹1
+            </AppText>
+            <TouchableOpacity
+              style={styles.trialButton}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Start free trial"
+            >
+              <AppText variant="labelMd" style={styles.trialButtonText}>
+                Try Now
+              </AppText>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.trialIllustration}>
+            <AppText style={styles.trialEmoji}>🎯</AppText>
+          </View>
+        </View>
+
         {/* ── Profile card ── */}
         <View style={styles.profileCard}>
-          {/* Avatar placeholder */}
           <View style={styles.avatar}>
             <AppText variant="h2" style={styles.avatarEmoji}>
               🧑
@@ -88,49 +118,43 @@ export function SettingsScreen({ navigation }: Props) {
           </View>
         </View>
 
-        {/* ── CTA button ── */}
-        <Button
-          label="Sign Up / Continue"
-          onPress={() => {}}
-          style={styles.ctaButton}
-          accessibilityLabel="Sign up or continue with full account"
-        />
-
         {/* ── Menu section ── */}
         <View style={styles.menuSection}>
           <MenuItem
-            icon={<Ionicons name="person-outline" size={20} color={colors.textSecondary} />}
-            label="My Profile"
+            icon={<Ionicons name="sparkles-outline" size={20} color={colors.primary} />}
+            label="New update available"
             onPress={() => {}}
           />
           <View style={styles.menuDivider} />
           <MenuItem
-            icon={<Ionicons name="notifications-outline" size={20} color={colors.textSecondary} />}
-            label="Notifications"
+            icon={<Ionicons name="call-outline" size={20} color={colors.textSecondary} />}
+            label="Phone number"
+            value={user.phone}
             onPress={() => {}}
           />
           <View style={styles.menuDivider} />
           <MenuItem
-            icon={<Feather name="shield" size={20} color={colors.textSecondary} />}
-            label="Privacy & Security"
+            icon={<Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />}
+            label="Learning since"
+            value="April 2026"
             onPress={() => {}}
           />
           <View style={styles.menuDivider} />
           <MenuItem
-            icon={<Ionicons name="help-circle-outline" size={20} color={colors.textSecondary} />}
-            label="Help & Support"
+            icon={<Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />}
+            label="Chat with us"
             onPress={() => {}}
           />
           <View style={styles.menuDivider} />
           <MenuItem
-            icon={<Ionicons name="document-text-outline" size={20} color={colors.textSecondary} />}
-            label="Terms & Privacy Policy"
-            onPress={() => {}}
-          />
-          <View style={styles.menuDivider} />
-          <MenuItem
-            icon={<MaterialCommunityIcons name="share-variant-outline" size={20} color={colors.textSecondary} />}
-            label="Share the App"
+            icon={
+              <MaterialCommunityIcons
+                name="share-variant-outline"
+                size={20}
+                color={colors.textSecondary}
+              />
+            }
+            label="Share the app"
             onPress={() => {}}
           />
         </View>
@@ -163,6 +187,53 @@ const styles = StyleSheet.create({
     paddingTop: spacing.m,
     paddingBottom: spacing.m,
   },
+  // ── Trial Banner ──
+  trialBanner: {
+    marginHorizontal: spacing.screenPadding,
+    marginBottom: spacing.m,
+    backgroundColor: colors.primary,
+    borderRadius: spacing.cardRadius,
+    padding: spacing.l,
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  trialContent: {
+    flex: 1,
+    gap: spacing.xxs,
+  },
+  trialTitle: {
+    color: colors.textInverse,
+    fontFamily: typography.fonts.inter.semiBold,
+  },
+  trialPrice: {
+    color: colors.textInverse,
+    fontFamily: typography.fonts.inter.bold,
+    marginBottom: spacing.s,
+  },
+  trialButton: {
+    backgroundColor: colors.background,
+    borderRadius: spacing.buttonRadius,
+    paddingHorizontal: spacing.l,
+    paddingVertical: spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  trialButtonText: {
+    color: colors.primary,
+    fontFamily: typography.fonts.inter.bold,
+  },
+  trialIllustration: {
+    width: 80,
+    height: 80,
+    borderRadius: spacing.xxxl,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  trialEmoji: {
+    fontSize: 40,
+  },
+  // ── Profile ──
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -174,9 +245,9 @@ const styles = StyleSheet.create({
     gap: spacing.m,
   },
   avatar: {
-    width: spacing.avatarSize + 12,
-    height: spacing.avatarSize + 12,
-    borderRadius: (spacing.avatarSize + 12) / 2,
+    width: spacing.avatarSize + spacing.s,
+    height: spacing.avatarSize + spacing.s,
+    borderRadius: (spacing.avatarSize + spacing.s) / 2,
     backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
@@ -196,11 +267,7 @@ const styles = StyleSheet.create({
   userPhone: {
     color: colors.textSecondary,
   },
-  ctaButton: {
-    marginHorizontal: spacing.screenPadding,
-    marginBottom: spacing.xl,
-    width: 'auto',
-  },
+  // ── Menu ──
   menuSection: {
     marginHorizontal: spacing.screenPadding,
     backgroundColor: colors.background,
@@ -218,20 +285,26 @@ const styles = StyleSheet.create({
     gap: spacing.m,
   },
   menuIconContainer: {
-    width: 24,
+    width: spacing.xl,
     alignItems: 'center',
   },
-  menuLabel: {
+  menuTextContainer: {
     flex: 1,
+  },
+  menuLabel: {
     color: colors.textPrimary,
   },
   menuLabelDestructive: {
     color: colors.error,
   },
+  menuValue: {
+    color: colors.textSecondary,
+    marginTop: spacing.xxxs,
+  },
   menuDivider: {
     height: 1,
     backgroundColor: colors.border,
-    marginLeft: spacing.m + spacing.m + spacing.xxl, // indent past icon
+    marginLeft: spacing.m + spacing.m + spacing.xl,
   },
   logoutSection: {
     marginHorizontal: spacing.screenPadding,

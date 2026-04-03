@@ -1,11 +1,13 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { FlashList } from '@shopify/flash-list';
 import BottomSheet from '@gorhom/bottom-sheet';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { colors } from '@/theme/colors';
+import { colors, palette } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import { AppText } from '@/components/ui/app-text';
@@ -13,57 +15,43 @@ import { SafeScreen } from '@/components/ui/safe-screen';
 import { QuestionCard } from '@/features/home/components/question-card';
 import { QuestionBottomSheet } from '@/features/home/components/question-bottom-sheet';
 import type { Question, QuestionCardState } from '@/features/home/types';
-import type { MainTabScreenProps } from '@/navigation/types';
+import type { RootStackParamList } from '@/navigation/types';
 
 import questionsData from '@/mock-data/questions.json';
 
-type Props = MainTabScreenProps<'Home'>;
+type ListItem =
+  | { type: 'header' }
+  | { type: 'question'; data: Question }
+  | { type: 'socialProof' };
 
-const SOCIAL_PROOF_INDEX = 2; // Show banner after card index 2 (before card 3)
-
-function getCardState(index: number, activeIndex: number): QuestionCardState {
-  if (index < activeIndex) return 'locked';
-  if (index === activeIndex) return 'active';
-  if (index === activeIndex + 1) return 'next';
+function getQuestionState(index: number): QuestionCardState {
+  if (index === 0) return 'active';
+  if (index === 1) return 'next';
   return 'locked';
 }
 
-type ListItem =
-  | { type: 'question'; question: Question; idx: number }
-  | { type: 'socialProof'; count: number; questionNumber: number };
-
-export function HomeScreen({ navigation }: Props) {
-  const [isPracticeExpanded, setIsPracticeExpanded] = useState(false);
-  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
+export function HomeScreen() {
+  const questions = questionsData as Question[];
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
 
-  const questions: Question[] = questionsData as Question[];
-  const ACTIVE_INDEX = 0; // first card is active
-
-  // Build list items (inject social proof after SOCIAL_PROOF_INDEX)
-  const listItems = React.useMemo<ListItem[]>(() => {
-    const items: ListItem[] = [];
-    questions.forEach((q, idx) => {
-      items.push({ type: 'question', question: q, idx });
-      if (idx === SOCIAL_PROOF_INDEX - 1) {
-        items.push({
-          type: 'socialProof',
-          count: questions[SOCIAL_PROOF_INDEX].completedTodayCount,
-          questionNumber: questions[SOCIAL_PROOF_INDEX].questionNumber,
-        });
+  // Build list items: header + questions + social proof after Q3
+  const listItems: ListItem[] = React.useMemo(() => {
+    const items: ListItem[] = [{ type: 'header' }];
+    questions.forEach((q, i) => {
+      items.push({ type: 'question', data: q });
+      // Insert social proof after question 3
+      if (i === 2) {
+        items.push({ type: 'socialProof' });
       }
     });
     return items;
   }, [questions]);
 
-  const handleCardPress = useCallback((question: Question) => {
+  const handleQuestionPress = useCallback((question: Question) => {
     setSelectedQuestion(question);
-    bottomSheetRef.current?.expand();
-  }, []);
-
-  const handleClose = useCallback(() => {
-    bottomSheetRef.current?.close();
-    setSelectedQuestion(null);
+    bottomSheetRef.current?.snapToIndex(0);
   }, []);
 
   const handleFeedbackPress = useCallback(() => {
@@ -71,93 +59,51 @@ export function HomeScreen({ navigation }: Props) {
     if (selectedQuestion) {
       navigation.navigate('SessionResult', { questionId: selectedQuestion.id });
     }
-  }, [navigation, selectedQuestion]);
+  }, [selectedQuestion, navigation]);
+
+  const handleBottomSheetClose = useCallback(() => {
+    setSelectedQuestion(null);
+  }, []);
 
   const renderItem = useCallback(
     ({ item }: { item: ListItem }) => {
+      if (item.type === 'header') {
+        return <HomeHeader />;
+      }
       if (item.type === 'socialProof') {
+        return <SocialProofBanner />;
+      }
+      if (item.type === 'question') {
+        const q = item.data;
+        const state = getQuestionState(q.questionNumber - 1);
         return (
-          <View style={styles.socialProofBanner}>
-            <AppText variant="caption" style={styles.socialProofText}>
-              🏅 {item.count.toLocaleString()} users completed Question {item.questionNumber} today 🏅
-            </AppText>
-          </View>
+          <QuestionCard
+            question={q}
+            state={state}
+            showStart={q.questionNumber === 1}
+            onPress={handleQuestionPress}
+          />
         );
       }
-      const cardState = getCardState(item.idx, ACTIVE_INDEX);
-      return (
-        <QuestionCard
-          question={item.question}
-          state={cardState}
-          showStart={item.idx === ACTIVE_INDEX}
-          onPress={handleCardPress}
-        />
-      );
+      return null;
     },
-    [handleCardPress],
+    [handleQuestionPress],
   );
 
-  const keyExtractor = useCallback((item: ListItem) => {
-    if (item.type === 'question') return item.question.id;
-    return `social-proof-${item.questionNumber}`;
-  }, []);
+  const keyExtractor = useCallback(
+    (item: ListItem, index: number) => {
+      if (item.type === 'header') return 'header';
+      if (item.type === 'socialProof') return 'social-proof';
+      if (item.type === 'question') return item.data.id;
+      return `item-${index}`;
+    },
+    [],
+  );
 
   return (
     <SafeScreen>
       <StatusBar style="dark" />
 
-      {/* ── Header ── */}
-      <View style={styles.header}>
-        <AppText variant="h2" style={styles.headerLogo}>
-          Ready!
-        </AppText>
-        <View style={styles.headerRight}>
-          {/* Notification badge */}
-          <TouchableOpacity
-            style={styles.notificationBadge}
-            accessibilityRole="button"
-            accessibilityLabel="Notifications, 8 unread"
-          >
-            <Ionicons name="flash" size={16} color={colors.textInverse} />
-            <AppText variant="labelSm" style={styles.badgeCount}>
-              8
-            </AppText>
-          </TouchableOpacity>
-          {/* Hamburger */}
-          <TouchableOpacity
-            style={styles.hamburger}
-            accessibilityRole="button"
-            accessibilityLabel="Open menu"
-          >
-            <Feather name="menu" size={24} color={colors.textPrimary} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* ── Practice Set Card ── */}
-      <TouchableOpacity
-        style={styles.practiceCard}
-        onPress={() => setIsPracticeExpanded(p => !p)}
-        activeOpacity={0.8}
-        accessibilityRole="button"
-        accessibilityLabel="Practice set: Top 50 Questions for Big Tech Companies"
-      >
-        <AppText variant="caption" style={styles.practiceLabel}>
-          Practicing Top 50 Questions for
-        </AppText>
-        <View style={styles.practiceRow}>
-          <AppText variant="h3" style={styles.practiceTitle}>
-            💪 Big Tech Companies
-          </AppText>
-          <Ionicons
-            name={isPracticeExpanded ? 'chevron-up' : 'chevron-down'}
-            size={20}
-            color={colors.textSecondary}
-          />
-        </View>
-      </TouchableOpacity>
-
-      {/* ── Question List ── */}
       <View style={styles.listContainer}>
         <FlashList
           data={listItems}
@@ -165,102 +111,192 @@ export function HomeScreen({ navigation }: Props) {
           keyExtractor={keyExtractor}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          estimatedItemSize={100}
         />
       </View>
 
-      {/* ── Bottom Sheet ── */}
       <QuestionBottomSheet
         question={selectedQuestion}
         bottomSheetRef={bottomSheetRef}
         onFeedbackPress={handleFeedbackPress}
-        onClose={handleClose}
+        onClose={handleBottomSheetClose}
       />
     </SafeScreen>
   );
 }
 
+/* ─── Header Component ──────────────────────────────────────────────────────── */
+
+function HomeHeader() {
+  return (
+    <View style={styles.headerContainer}>
+      {/* Top bar: Brand + streak + menu */}
+      <View style={styles.topBar}>
+        <AppText variant="h2" style={styles.brandText}>
+          Ready!
+        </AppText>
+        <View style={styles.topBarRight}>
+          <View style={styles.streakBadge}>
+            <AppText variant="labelSm" style={styles.streakIcon}>
+              ⚡
+            </AppText>
+            <AppText variant="labelMd" style={styles.streakCount}>
+              8
+            </AppText>
+          </View>
+          <TouchableOpacity
+            style={styles.menuButton}
+            accessibilityRole="button"
+            accessibilityLabel="Open menu"
+          >
+            <Ionicons name="menu" size={24} color={colors.textPrimary} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Context card */}
+      <View style={styles.contextCard}>
+        <AppText variant="h3" style={styles.contextEmoji}>
+          💪
+        </AppText>
+        <View style={styles.contextTextContainer}>
+          <AppText variant="bodySm" style={styles.contextLabel}>
+            Practicing Top 50 Questions for
+          </AppText>
+          <AppText variant="labelLg" style={styles.contextTitle}>
+            Big Tech Companies
+          </AppText>
+        </View>
+        <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
+      </View>
+    </View>
+  );
+}
+
+/* ─── Social Proof Banner ───────────────────────────────────────────────────── */
+
+function SocialProofBanner() {
+  return (
+    <View style={styles.socialProofContainer}>
+      <View style={styles.socialProofBorder} />
+      <View style={styles.socialProofContent}>
+        <AppText variant="labelSm" style={styles.socialProofIcon}>
+          🏅
+        </AppText>
+        <AppText variant="caption" style={styles.socialProofText}>
+          2,312 users completed Question 3 today
+        </AppText>
+        <AppText variant="labelSm" style={styles.socialProofIcon}>
+          🏅
+        </AppText>
+      </View>
+      <View style={styles.socialProofBorder} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.screenPadding,
-    paddingVertical: spacing.s,
-  },
-  headerLogo: {
-    color: colors.primary,
-    fontSize: 28,
-    fontFamily: typography.fonts.inter.bold,
-    letterSpacing: -0.5,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.s,
-  },
-  notificationBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.success,
-    borderRadius: 20,
-    paddingHorizontal: spacing.s,
-    paddingVertical: spacing.xxs,
-    gap: spacing.xxxs,
-  },
-  badgeCount: {
-    color: colors.textInverse,
-  },
-  hamburger: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  practiceCard: {
-    marginHorizontal: spacing.screenPadding,
-    marginBottom: spacing.m,
-    backgroundColor: '#FFF9E6',
-    borderRadius: spacing.cardRadius,
-    borderWidth: 1.5,
-    borderColor: '#E8C84A',
-    paddingHorizontal: spacing.m,
-    paddingVertical: spacing.s,
-  },
-  practiceLabel: {
-    color: colors.textSecondary,
-    marginBottom: spacing.xxxs,
-  },
-  practiceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  practiceTitle: {
-    color: colors.textPrimary,
-    flex: 1,
-    fontSize: typography.sizes.m,
-    fontFamily: typography.fonts.inter.bold,
-  },
   listContainer: {
     flex: 1,
   },
   listContent: {
-    paddingHorizontal: spacing.screenPadding,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.xxl,
   },
-  socialProofBanner: {
+  // ── Header ──
+  headerContainer: {
+    paddingHorizontal: spacing.screenPadding,
+    paddingBottom: spacing.l,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.m,
+  },
+  brandText: {
+    color: colors.primary,
+    fontFamily: typography.fonts.inter.bold,
+    fontSize: typography.sizes.xxl,
+  },
+  topBarRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.s,
+  },
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.streakBadgeBg,
+    borderRadius: spacing.l,
+    paddingHorizontal: spacing.s,
+    paddingVertical: spacing.xxs,
+    gap: spacing.xxxs,
+  },
+  streakIcon: {
+    fontSize: typography.sizes.s,
+  },
+  streakCount: {
+    color: colors.streakBadgeText,
+    fontFamily: typography.fonts.inter.bold,
+  },
+  menuButton: {
+    width: spacing.xxxl,
+    height: spacing.xxxl,
+    borderRadius: spacing.l,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // ── Context Card ──
+  contextCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.cardNextBg,
+    borderRadius: spacing.cardRadius,
+    padding: spacing.m,
+    gap: spacing.s,
+    borderWidth: 1,
+    borderColor: colors.cardNextBorder,
+  },
+  contextEmoji: {
+    fontSize: 28,
+  },
+  contextTextContainer: {
+    flex: 1,
+  },
+  contextLabel: {
+    color: colors.textSecondary,
+    fontSize: typography.sizes.xs,
+  },
+  contextTitle: {
+    color: colors.textPrimary,
+    fontFamily: typography.fonts.inter.bold,
+  },
+  // ── Social Proof ──
+  socialProofContainer: {
+    paddingHorizontal: spacing.screenPadding,
+    paddingVertical: spacing.m,
+    gap: spacing.xs,
+  },
+  socialProofBorder: {
+    height: 1,
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: colors.cardNextBorder,
+  },
+  socialProofContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.s,
-    marginVertical: spacing.xs,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
+  },
+  socialProofIcon: {
+    fontSize: typography.sizes.m,
   },
   socialProofText: {
-    color: colors.primary,
-    fontFamily: typography.fonts.inter.semiBold,
+    color: colors.textSecondary,
+    fontFamily: typography.fonts.inter.medium,
   },
 });

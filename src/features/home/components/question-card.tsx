@@ -1,11 +1,11 @@
 import React, { memo } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Image } from 'expo-image';
+import { View, StyleSheet } from 'react-native';
 
 import { colors, palette } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import { AppText } from '@/components/ui/app-text';
+import { ScalePressable } from '@/components/ui/animated-pressable';
 import type { Question, QuestionCardState } from '@/features/home/types';
 
 interface QuestionCardProps {
@@ -15,26 +15,61 @@ interface QuestionCardProps {
   onPress: (question: Question) => void;
 }
 
-const STATE_COLORS: Record<QuestionCardState, { bg: string; badgeBg: string; badgeText: string; border: string }> = {
+const STATE_THEME: Record<
+  QuestionCardState,
+  { bg: string; border: string; badgeBg: string; badgeText: string; shadowBg: string }
+> = {
   active: {
-    bg: '#D4F5C4',       // light green
-    badgeBg: '#3DAB23',  // deep green
+    bg: colors.cardActiveBg,
+    border: colors.cardActiveBorder,
+    badgeBg: colors.cardActiveBadge,
     badgeText: colors.textInverse,
-    border: '#3DAB23',
+    shadowBg: colors.cardActiveBorder,
   },
   next: {
-    bg: '#FFF0B3',       // light yellow
-    badgeBg: '#D4A017',  // golden yellow
+    bg: colors.cardNextBg,
+    border: colors.cardNextBorder,
+    badgeBg: colors.cardNextBadge,
     badgeText: colors.textInverse,
-    border: '#D4A017',
+    shadowBg: colors.cardNextBorder,
   },
   locked: {
-    bg: '#F0F0F0',
-    badgeBg: '#C5C5C5',
+    bg: colors.cardLockedBg,
+    border: colors.cardLockedBorder,
+    badgeBg: colors.cardLockedBadge,
     badgeText: colors.textInverse,
-    border: '#C5C5C5',
+    shadowBg: colors.cardLockedShadow,
   },
 };
+
+/**
+ * Calculates alignment/margin for the winding-path stagger effect.
+ * Index 0: left-aligned
+ * Index 1: center-right
+ * Index 2+: right-aligned
+ */
+export function getStaggerStyle(index: number) {
+  if (index === 0) {
+    return {
+      alignSelf: 'flex-start' as const,
+      marginLeft: spacing.screenPadding,
+      marginRight: spacing.giga + spacing.xl,
+    };
+  }
+  if (index === 1) {
+    return {
+      alignSelf: 'center' as const,
+      marginLeft: spacing.xxxl,
+      marginRight: spacing.screenPadding,
+    };
+  }
+  // Index 2+ : right-aligned
+  return {
+    alignSelf: 'flex-end' as const,
+    marginLeft: spacing.giga + spacing.m,
+    marginRight: spacing.screenPadding,
+  };
+}
 
 export const QuestionCard = memo(function QuestionCard({
   question,
@@ -42,116 +77,152 @@ export const QuestionCard = memo(function QuestionCard({
   showStart = false,
   onPress,
 }: QuestionCardProps) {
-  const theme = STATE_COLORS[state];
+  const theme = STATE_THEME[state];
 
   return (
-    <TouchableOpacity
-      style={[styles.card, { backgroundColor: theme.bg, borderColor: theme.border }]}
-      onPress={() => onPress(question)}
-      activeOpacity={0.85}
-      accessibilityRole="button"
-      accessibilityLabel={`Question ${question.questionNumber} by ${question.companyName}`}
-    >
-      {/* Company logo + name */}
-      <View style={styles.leftSection}>
-        {question.companyLogoUrl ? (
-          <Image
-            source={{ uri: question.companyLogoUrl }}
-            style={styles.logo}
-            cachePolicy="memory-disk"
-            contentFit="contain"
-            accessibilityLabel={`${question.companyName} logo`}
-          />
-        ) : (
-          <View style={[styles.logo, styles.logoPlaceholder]}>
-            <AppText variant="labelSm" style={{ color: colors.textSecondary }}>
-              {question.companyName.slice(0, 2).toUpperCase()}
+    <View style={[styles.outerWrapper, getStaggerStyle(question.questionNumber - 1)]}>
+      <ScalePressable
+        onPress={() => onPress(question)}
+        accessibilityLabel={`Question ${question.questionNumber} by ${question.companyName}`}
+        scaleValue={0.96}
+      >
+        {/* 3D shadow layer for the pill */}
+        <View
+          style={[
+            styles.pillShadow,
+            { backgroundColor: theme.shadowBg },
+          ]}
+        />
+
+        {/* Main pill surface */}
+        <View style={[styles.pill, { backgroundColor: theme.bg, borderColor: theme.border }]}>
+          {/* Company logo placeholder + name */}
+          <View style={styles.leftSection}>
+            <View style={[styles.logoPlaceholder, { borderColor: theme.border }]}>
+              <AppText variant="labelSm" style={styles.logoText}>
+                {question.companyName.slice(0, 2).toLowerCase()}
+              </AppText>
+            </View>
+            <AppText variant="labelMd" style={styles.companyName}>
+              {question.companyName}
             </AppText>
           </View>
-        )}
-        <AppText variant="labelMd" style={styles.companyName}>
-          {question.companyName}
-        </AppText>
-      </View>
 
-      {/* START bubble (optional) */}
+          {/* Number badge */}
+          <View style={[styles.badge, { backgroundColor: theme.badgeBg }]}>
+            {/* Badge shadow */}
+            <View style={[styles.badgeShadow, { backgroundColor: theme.shadowBg }]} />
+            <View style={[styles.badgeInner, { backgroundColor: theme.badgeBg }]}>
+              <AppText variant="h2" style={[styles.badgeNumber, { color: theme.badgeText }]}>
+                {question.questionNumber}
+              </AppText>
+            </View>
+          </View>
+        </View>
+      </ScalePressable>
+
+      {/* START tag (only for active card) */}
       {showStart && (
-        <View style={styles.startBubble}>
+        <View style={styles.startTag}>
           <AppText variant="labelMd" style={styles.startText}>
             START
           </AppText>
         </View>
       )}
-
-      {/* Number badge */}
-      <View style={[styles.badge, { backgroundColor: theme.badgeBg }]}>
-        <AppText variant="h2" style={[styles.badgeNumber, { color: theme.badgeText }]}>
-          {question.questionNumber}
-        </AppText>
-      </View>
-    </TouchableOpacity>
+    </View>
   );
 });
 
 const styles = StyleSheet.create({
-  card: {
+  outerWrapper: {
+    marginBottom: spacing.m,
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 40,
-    borderWidth: 1.5,
-    paddingVertical: spacing.s,
+  },
+  pillShadow: {
+    position: 'absolute',
+    top: spacing.xxs,
+    left: 0,
+    right: 0,
+    bottom: -spacing.xxs,
+    borderRadius: spacing.pillRadius,
+  },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: spacing.pillRadius,
+    borderWidth: 2,
+    paddingVertical: spacing.xs,
     paddingLeft: spacing.m,
     paddingRight: spacing.xxs,
-    marginBottom: spacing.s,
+    minHeight: 68,
   },
   leftSection: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.s,
-  },
-  logo: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    gap: spacing.xs,
   },
   logoPlaceholder: {
-    backgroundColor: colors.backgroundSecondary,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+  },
+  logoText: {
+    color: colors.textSecondary,
+    fontSize: typography.sizes.xxs,
+    fontFamily: typography.fonts.inter.semiBold,
   },
   companyName: {
     color: colors.textPrimary,
+    fontFamily: typography.fonts.inter.semiBold,
   },
-  startBubble: {
+  badge: {
+    width: spacing.badgeSize,
+    height: spacing.badgeSize,
+    borderRadius: spacing.badgeSize / 2,
+    position: 'relative',
+  },
+  badgeShadow: {
+    position: 'absolute',
+    top: spacing.xxs,
+    left: 0,
+    right: 0,
+    bottom: -spacing.xxs,
+    borderRadius: spacing.badgeSize / 2,
+  },
+  badgeInner: {
+    width: spacing.badgeSize,
+    height: spacing.badgeSize,
+    borderRadius: spacing.badgeSize / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  badgeNumber: {
+    fontSize: 28,
+    fontFamily: typography.fonts.inter.bold,
+  },
+  startTag: {
     backgroundColor: colors.background,
-    borderRadius: spacing.s,
+    borderRadius: spacing.xs,
     paddingHorizontal: spacing.m,
     paddingVertical: spacing.xxs,
-    marginRight: spacing.xs,
+    marginLeft: spacing.xs,
     shadowColor: palette.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.12,
+    shadowRadius: spacing.xxs,
     elevation: 3,
   },
   startText: {
-    color: colors.textPrimary,
+    color: colors.cardActiveBadge,
     fontSize: typography.sizes.s,
-    letterSpacing: 0.5,
-  },
-  badge: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeNumber: {
-    color: colors.textInverse,
-    fontSize: 28,
     fontFamily: typography.fonts.inter.bold,
+    letterSpacing: 0.5,
   },
 });

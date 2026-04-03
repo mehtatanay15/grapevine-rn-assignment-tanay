@@ -1,6 +1,5 @@
 import React, { memo, useCallback } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors, palette } from '@/theme/colors';
@@ -26,49 +25,28 @@ export const KeyMomentsTab = memo(function KeyMomentsTab({
   moments,
   audioDurationSeconds,
 }: KeyMomentsTabProps) {
-  const renderMoment = useCallback(
-    ({ item, index }: { item: KeyMoment; index: number }) => {
-      const isLast = index === moments.length - 1;
-      return (
-        <View style={[styles.momentRow, !isLast && styles.momentBorder]}>
-          <AppText
-            variant="labelMd"
-            style={[
-              styles.timestamp,
-              { color: item.type === 'positive' ? '#1D7FEA' : '#EA4C1D' },
-            ]}
-          >
-            {item.timestamp}
-          </AppText>
-          <AppText variant="bodyMd" style={styles.description}>
-            {item.description}
-          </AppText>
-        </View>
-      );
-    },
-    [moments.length],
-  );
-
   return (
-    <View style={styles.container}>
-      {/* Mock audio player */}
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* ── Audio Player ── */}
       <View style={styles.player}>
         <TouchableOpacity
           style={styles.playButton}
           accessibilityRole="button"
           accessibilityLabel="Play audio"
         >
-          <Ionicons name="play" size={20} color={colors.primary} />
+          <Ionicons name="play" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
 
         <View style={styles.playerInfo}>
           <AppText variant="labelMd" style={styles.playerTitle}>
             Mock Interview
           </AppText>
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
-              <View style={styles.progressFill} />
-            </View>
+          <View style={styles.progressBar}>
+            <View style={styles.progressFill} />
           </View>
           <View style={styles.timeRow}>
             <AppText variant="caption" style={styles.timeText}>
@@ -81,15 +59,32 @@ export const KeyMomentsTab = memo(function KeyMomentsTab({
         </View>
       </View>
 
-      {/* Key moments list */}
-      <FlashList
-        data={moments}
-        renderItem={renderMoment}
-        keyExtractor={item => item.timestamp}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
+      {/* ── Moments List ── */}
+      {moments.map((moment, index) => {
+        const isLast = index === moments.length - 1;
+        return (
+          <View key={`${moment.timestamp}-${index}`} style={[styles.momentRow, !isLast && styles.momentBorder]}>
+            <AppText
+              variant="labelMd"
+              style={[
+                styles.timestamp,
+                {
+                  color:
+                    moment.type === 'positive'
+                      ? colors.timestampPositive
+                      : colors.timestampNegative,
+                },
+              ]}
+            >
+              {moment.timestamp}
+            </AppText>
+            <AppText variant="bodyMd" style={styles.description}>
+              {moment.description}
+            </AppText>
+          </View>
+        );
+      })}
+    </ScrollView>
   );
 });
 
@@ -97,28 +92,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollContent: {
+    paddingHorizontal: spacing.screenPadding,
+    paddingTop: spacing.m,
+    paddingBottom: spacing.xxxl,
+  },
+  // ── Player ──
   player: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: spacing.screenPadding,
-    marginTop: spacing.m,
-    marginBottom: spacing.s,
-    backgroundColor: '#FFF3E0',
+    backgroundColor: colors.primaryLight,
     borderRadius: spacing.cardRadius,
     padding: spacing.m,
     gap: spacing.m,
+    marginBottom: spacing.m,
   },
   playButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: spacing.xxxl,
+    height: spacing.xxxl,
+    borderRadius: spacing.l,
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: palette.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: spacing.xxs,
     elevation: 2,
   },
   playerInfo: {
@@ -129,20 +128,17 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontFamily: typography.fonts.inter.semiBold,
   },
-  progressContainer: {
-    width: '100%',
-  },
   progressBar: {
-    height: 4,
+    height: spacing.xxs,
     backgroundColor: colors.border,
-    borderRadius: 2,
+    borderRadius: spacing.xxxs,
     overflow: 'hidden',
   },
   progressFill: {
     width: '40%',
     height: '100%',
     backgroundColor: colors.primary,
-    borderRadius: 2,
+    borderRadius: spacing.xxxs,
   },
   timeRow: {
     flexDirection: 'row',
@@ -151,10 +147,7 @@ const styles = StyleSheet.create({
   timeText: {
     color: colors.textSecondary,
   },
-  listContent: {
-    paddingHorizontal: spacing.screenPadding,
-    paddingBottom: spacing.xxxl,
-  },
+  // ── Moments ──
   momentRow: {
     paddingVertical: spacing.m,
     gap: spacing.xxs,

@@ -46,7 +46,7 @@ function Section({ title, items }: SectionProps) {
         {items.map((item, index) => (
           <View key={index} style={styles.bulletRow}>
             <AppText variant="bodyMd" style={styles.bulletSymbol}>
-              ◆
+              ✦
             </AppText>
             <AppText variant="bodyMd" style={styles.bulletText}>
               {item}
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   bulletSymbol: {
     color: colors.textPrimary,
     fontSize: typography.sizes.xs,
-    marginTop: 4,
+    marginTop: spacing.xxs,
     lineHeight: 20,
   },
   bulletText: {

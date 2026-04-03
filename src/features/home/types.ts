@@ -9,4 +9,11 @@ export interface Question {
   completedTodayCount: number;
 }
 
+export interface Company {
+  id: string;
+  name: string;
+  logoUrl: string | null;
+  questionCount: number;
+}
+
 export type QuestionCardState = 'active' | 'next' | 'locked';
