@@ -9,7 +9,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -72,6 +72,7 @@ export function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          <Animated.View entering={FadeIn.duration(600)}>
 
           {/* ── Heading: "Kickstart your journey" ──────────────────────────
               Figma: top:88 left:24 width:309 height:36
@@ -153,6 +154,7 @@ export function LoginScreen() {
             </Animated.View>
           )}
 
+          </Animated.View>
         </ScrollView>
 
         {/* ── Continue bar ────────────────────────────────────────────────

@@ -12,6 +12,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  FadeIn,
 } from 'react-native-reanimated';
 import { Pressable } from 'react-native';
 
@@ -112,7 +113,7 @@ export function HomeScreen() {
     <SafeScreen>
       <StatusBar style="dark" />
 
-      <View style={styles.listContainer}>
+      <Animated.View style={styles.listContainer} entering={FadeIn.duration(600)}>
         <FlashList
           data={listItems}
           renderItem={renderItem}
@@ -123,7 +124,7 @@ export function HomeScreen() {
           estimatedItemSize={100}
           extraData={selectedQuestion?.id}
         />
-      </View>
+      </Animated.View>
 
       <BottomNav />
     </SafeScreen>

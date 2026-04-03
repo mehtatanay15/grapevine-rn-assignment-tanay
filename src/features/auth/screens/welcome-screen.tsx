@@ -7,6 +7,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  FadeIn,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
@@ -173,7 +174,7 @@ export function OrangePrimaryButton({
 // ─── Welcome Screen ───────────────────────────────────────────────────────────
 export function WelcomeScreen({ navigation }: Props) {
   return (
-    <View style={styles.root}>
+    <Animated.View style={styles.root} entering={FadeIn.duration(600)}>
       <StatusBar style="dark" />
 
       {/* Logo — 138×46 @ top:78 left:128 */}
@@ -213,7 +214,7 @@ export function WelcomeScreen({ navigation }: Props) {
           <Text style={styles.footerLink}>privacy policy</Text>
         </Text>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 

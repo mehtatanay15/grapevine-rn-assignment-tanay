@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -31,7 +32,8 @@ export function SettingsScreen({ navigation }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Image 
+        <Animated.View entering={FadeIn.duration(600)} style={{ alignItems: 'center', width: '100%' }}>
+          <Image 
           source={require('../../../../assets/images/Settings/Card.png')}
           style={styles.heroCard}
           contentFit="contain"
@@ -107,6 +109,7 @@ export function SettingsScreen({ navigation }: Props) {
           <AppText style={styles.footerText}>Made with ❤️ from India</AppText>
         </View>
 
+        </Animated.View>
       </ScrollView>
     </SafeScreen>
   );

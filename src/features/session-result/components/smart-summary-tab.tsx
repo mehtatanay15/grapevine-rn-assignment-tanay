@@ -81,13 +81,13 @@ const styles = StyleSheet.create({
   },
   bulletRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 16,
     alignItems: 'flex-start',
   },
   bulletSymbol: {
-    width: 6,
-    height: 6,
-    marginTop: 8,
+    width: 20,
+    height: 20,
+    marginTop: 2,
   },
   bulletText: {
     flex: 1,
