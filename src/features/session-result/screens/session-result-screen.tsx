@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -27,6 +27,14 @@ const TABS: { key: TabType; label: string }[] = [
   { key: 'summary', label: 'Smart summary' },
   { key: 'keyMoments', label: 'Key moments' },
 ];
+
+const COMPANY_LOGOS: Record<string, any> = {
+  phonepe: require('../../../../assets/images/Companies/phonepe.png'),
+  amazon: require('../../../../assets/images/Companies/amazon.png'),
+  google: require('../../../../assets/images/Companies/google.png'),
+  microsoft: require('../../../../assets/images/Companies/microsoft.png'),
+  facebook: require('../../../../assets/images/Companies/facebook.png'),
+};
 
 export function SessionResultScreen({ navigation }: Props) {
   const [activeTab, setActiveTab] = useState<TabType>('summary');
@@ -59,43 +67,51 @@ export function SessionResultScreen({ navigation }: Props) {
 
       {/* ── Green header ── */}
       <View style={styles.header}>
-        {/* Close button */}
+        {/* Close button  */}
+        <View style={styles.closeBtnShadow} />
         <TouchableOpacity
           style={styles.closeButton}
           onPress={() => navigation.goBack()}
           accessibilityRole="button"
           accessibilityLabel="Close session result"
         >
-          <Ionicons name="close" size={20} color={colors.textPrimary} />
+          <Image source={require('../../../../assets/images/cross.png')} style={{ width: 14, height: 14 }} contentFit="contain" />
         </TouchableOpacity>
 
-        {/* Overlapping avatars */}
-        <View style={styles.avatarsContainer}>
-          <View style={[styles.avatar, styles.avatarLeft]}>
-            <AppText style={styles.avatarEmoji}>👨</AppText>
-          </View>
-          <View style={[styles.avatar, styles.avatarRight]}>
-            <AppText style={styles.avatarEmoji}>👩</AppText>
-          </View>
-        </View>
+        {/* Grouped mock avatars */}
+        <Image 
+          source={require('../../../../assets/images/mock.png')} 
+          style={styles.mockAvatars}
+          contentFit="contain"
+        />
+
+        {/* Triangle pointing up */}
+        <View style={styles.triangleUp} />
 
         {/* Question card */}
         <View style={styles.questionCard}>
-          <AppText variant="bodyMd" style={styles.questionText}>
+          <AppText style={styles.questionText}>
             {result.questionText}
           </AppText>
           <View style={styles.askedByRow}>
-            <View style={styles.companyLogoSmall}>
-              <AppText variant="labelSm" style={styles.logoText}>
-                {result.companyName.slice(0, 2).toLowerCase()}
-              </AppText>
-            </View>
-            <AppText variant="labelMd" style={styles.askedByText}>
+            {COMPANY_LOGOS[result.companyName.toLowerCase()] && (
+              <View style={styles.companyLogoSmall}>
+                <Image 
+                  source={COMPANY_LOGOS[result.companyName.toLowerCase()]} 
+                  style={styles.companyLogo} 
+                  contentFit="contain" 
+                />
+              </View>
+            )}
+            <AppText style={styles.askedByText}>
               Asked by {result.companyName}
             </AppText>
           </View>
         </View>
       </View>
+
+      {/* ── White Board ── */}
+      <View style={styles.boardContainer}>
 
       {/* ── Tab switcher ── */}
       <View style={styles.tabContainer}>
@@ -123,7 +139,7 @@ export function SessionResultScreen({ navigation }: Props) {
         <Animated.View style={[styles.tabIndicator, indicatorStyle]} />
       </View>
 
-      {/* ── Tab content ── */}
+      {/* ── Tab Content ── */}
       <View style={styles.tabContent}>
         {activeTab === 'summary' && <SmartSummaryTab data={result.smartSummary} />}
         {activeTab === 'keyMoments' && (
@@ -134,73 +150,76 @@ export function SessionResultScreen({ navigation }: Props) {
         )}
       </View>
     </View>
+  </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#E8F7EC', // Derived light mint tint
   },
   // ── Header ──
   header: {
-    backgroundColor: colors.sessionHeaderBg,
-    paddingTop: spacing.giga,
-    paddingBottom: spacing.l,
-    paddingHorizontal: spacing.screenPadding,
+    paddingTop: 60,
+    paddingBottom: 24,
+    paddingHorizontal: 16,
     alignItems: 'center',
+    zIndex: 10,
+  },
+  closeBtnShadow: {
+    position: 'absolute',
+    top: 64 + 4, // 60 padding + 4 margin offset for drop shadow
+    right: 16,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#13BF69', // var(--Green-40) shadow base
+    zIndex: 100,
   },
   closeButton: {
     position: 'absolute',
-    top: spacing.xxxl + spacing.xs,
-    right: spacing.screenPadding,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
+    top: 64,
+    right: 16,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#95E5BD', // var(--Green-20)
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
+    zIndex: 101,
   },
-  avatarsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.m,
+  mockAvatars: {
+    width: 173,
+    height: 100,
+    marginBottom: 8,
   },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: spacing.xxxl,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: colors.sessionHeaderBg,
-  },
-  avatarLeft: {
-    zIndex: 1,
-  },
-  avatarRight: {
-    marginLeft: -spacing.l,
-    zIndex: 0,
-  },
-  avatarEmoji: {
-    fontSize: 40,
+  triangleUp: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 10,
+    borderRightWidth: 10,
+    borderBottomWidth: 10,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#13BF69',
+    marginTop: -8, // pull up into avatars space slightly or flush
   },
   questionCard: {
-    backgroundColor: colors.success,
-    borderRadius: spacing.cardRadius,
-    paddingHorizontal: spacing.m,
-    paddingVertical: spacing.m,
-    gap: spacing.s,
-    width: '100%',
+    backgroundColor: '#13BF69', // var(--Green-40)
+    borderRadius: 16,
+    padding: 16,
+    gap: 10,
+    width: 361,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   questionText: {
-    color: colors.textInverse,
-    fontFamily: typography.fonts.inter.semiBold,
+    color: '#FFFFFF', // var(--Grey-00)
+    fontFamily: typography.fonts.inter.bold,
+    fontSize: 16,
     lineHeight: 22,
     textAlign: 'center',
   },
@@ -208,54 +227,68 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.xs,
+    gap: 8,
   },
   companyLogoSmall: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logoText: {
-    color: colors.textInverse,
-    fontSize: typography.sizes.xxs,
+  companyLogo: {
+    width: 14,
+    height: 14,
   },
   askedByText: {
-    color: colors.textInverse,
-    fontFamily: typography.fonts.inter.medium,
+    color: '#FFFFFF',
+    fontFamily: typography.fonts.inter.semiBold,
+    fontSize: 14,
+  },
+  // ── White Board ──
+  boardContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    borderTopWidth: 1,
+    borderRightWidth: 1,
+    borderLeftWidth: 1,
+    borderColor: '#EFEFF4', 
+    marginHorizontal: 0, // full width
+    paddingTop: 8,
   },
   // ── Tabs ──
   tabContainer: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
     position: 'relative',
     paddingHorizontal: spacing.screenPadding,
+    marginTop: 16,
   },
   tabButton: {
     flex: 1,
-    paddingVertical: spacing.m,
+    paddingVertical: 12,
     alignItems: 'center',
   },
   tabLabel: {
     textAlign: 'center',
+    fontSize: 15,
   },
   tabLabelActive: {
-    color: colors.textPrimary,
+    color: '#1C1C1E',
     fontFamily: typography.fonts.inter.bold,
   },
   tabLabelInactive: {
-    color: colors.textSecondary,
-    fontFamily: typography.fonts.inter.normal,
+    color: '#8E8E93',
+    fontFamily: typography.fonts.inter.medium,
   },
   tabIndicator: {
     position: 'absolute',
     bottom: 0,
     left: spacing.screenPadding,
     height: 2,
-    backgroundColor: colors.textPrimary,
+    backgroundColor: '#1C1C1E',
   },
   tabContent: {
     flex: 1,

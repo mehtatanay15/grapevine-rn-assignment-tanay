@@ -81,7 +81,7 @@ function OutlinedNumber({ text }: { text: string }) {
       <Text style={[baseStyle, { position: 'absolute', transform: [{ translateX: 1.5 }, { translateY: 0 }], color: outlineColor }]}>{text}</Text>
       <Text style={[baseStyle, { position: 'absolute', transform: [{ translateX: 0 }, { translateY: -1.5 }], color: outlineColor }]}>{text}</Text>
       <Text style={[baseStyle, { position: 'absolute', transform: [{ translateX: 0 }, { translateY: 1.5 }], color: outlineColor }]}>{text}</Text>
-      <Text style={[baseStyle, { color: '#FFFFFF' }]}>{text}</Text>
+      <Text style={[baseStyle, { position: 'absolute', color: '#FFFFFF' }]}>{text}</Text>
     </View>
   );
 }
@@ -162,7 +162,7 @@ export const QuestionCard = memo(function QuestionCard({
           {state !== 'locked' && (
             <Image 
               source={require('../../../../assets/images/Button/base-mask.png')} 
-              style={StyleSheet.absoluteFillObject} 
+              style={[StyleSheet.absoluteFillObject, { top: 2, left: 2, bottom: 2, right: 2, borderRadius: PILL_RADIUS - 2 }]} 
               contentFit="cover" 
               cachePolicy="memory-disk"
             />
@@ -195,7 +195,7 @@ export const QuestionCard = memo(function QuestionCard({
             {state !== 'locked' && (
               <Image 
                 source={require('../../../../assets/images/Button/mask-group.png')} 
-                style={StyleSheet.absoluteFillObject} 
+                style={[StyleSheet.absoluteFillObject, { top: 2, left: 0, bottom: 2, right: 2, borderRadius: PILL_RADIUS - 2 }]} 
                 contentFit="cover" 
                 cachePolicy="memory-disk"
               />

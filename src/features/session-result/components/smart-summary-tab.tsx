@@ -1,5 +1,5 @@
-import React, { memo } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
+import { Image } from 'expo-image';
 
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
@@ -39,16 +39,18 @@ interface SectionProps {
 function Section({ title, items }: SectionProps) {
   return (
     <View accessibilityRole="summary">
-      <AppText variant="h3" style={styles.sectionTitle}>
+      <AppText style={styles.sectionTitle}>
         {title}
       </AppText>
       <View style={styles.bulletList}>
         {items.map((item, index) => (
           <View key={index} style={styles.bulletRow}>
-            <AppText variant="bodyMd" style={styles.bulletSymbol}>
-              ✦
-            </AppText>
-            <AppText variant="bodyMd" style={styles.bulletText}>
+            <Image 
+               source={require('../../../../assets/images/bullet-point.png')} 
+               style={styles.bulletSymbol} 
+               contentFit="contain" 
+            />
+            <AppText style={styles.bulletText}>
               {item}
             </AppText>
           </View>
@@ -63,32 +65,34 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingHorizontal: spacing.screenPadding,
-    paddingTop: spacing.l,
+    paddingHorizontal: 24,
+    paddingTop: 32,
   },
   sectionTitle: {
-    color: colors.textPrimary,
-    fontSize: typography.sizes.l,
-    fontFamily: typography.fonts.inter.bold,
-    marginBottom: spacing.m,
+    color: '#1C1C1E',
+    fontFamily: typography.fonts.inter.semiBold,
+    fontSize: 16,
+    lineHeight: 16,
+    marginBottom: 16,
   },
   bulletList: {
-    gap: spacing.m,
+    gap: 12,
   },
   bulletRow: {
     flexDirection: 'row',
-    gap: spacing.xs,
+    gap: 12,
     alignItems: 'flex-start',
   },
   bulletSymbol: {
-    color: colors.textPrimary,
-    fontSize: typography.sizes.xs,
-    marginTop: spacing.xxs,
-    lineHeight: 20,
+    width: 6,
+    height: 6,
+    marginTop: 8,
   },
   bulletText: {
     flex: 1,
-    color: colors.textPrimary,
+    color: '#48484A', // var(--Surface-70)
+    fontFamily: typography.fonts.inter.semiBold,
+    fontSize: 16,
     lineHeight: 22,
   },
   sectionSpacer: {

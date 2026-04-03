@@ -38,21 +38,22 @@ export const KeyMomentsTab = memo(function KeyMomentsTab({
           accessibilityRole="button"
           accessibilityLabel="Play audio"
         >
-          <Ionicons name="play" size={20} color={colors.textPrimary} />
+          {/* using Ionicons play since pause.png doesn't exist locally */}
+          <Ionicons name="play" size={20} color="#BF5F0A" style={{ marginLeft: 3 }} />
         </TouchableOpacity>
 
         <View style={styles.playerInfo}>
-          <AppText variant="labelMd" style={styles.playerTitle}>
+          <AppText style={styles.playerTitle}>
             Mock Interview
           </AppText>
           <View style={styles.progressBar}>
             <View style={styles.progressFill} />
           </View>
           <View style={styles.timeRow}>
-            <AppText variant="caption" style={styles.timeText}>
+            <AppText style={styles.timeText}>
               00:00
             </AppText>
-            <AppText variant="caption" style={styles.timeText}>
+            <AppText style={styles.timeText}>
               {formatDuration(audioDurationSeconds)}
             </AppText>
           </View>
@@ -101,51 +102,58 @@ const styles = StyleSheet.create({
   player: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primaryLight,
-    borderRadius: spacing.cardRadius,
-    padding: spacing.m,
-    gap: spacing.m,
-    marginBottom: spacing.m,
+    backgroundColor: '#FFF1E5', // var(--Orange-10)
+    borderRadius: 16, // Rounding/L
+    paddingTop: 16,
+    paddingRight: 16,
+    paddingBottom: 16,
+    paddingLeft: 12,
+    gap: 12,
+    marginBottom: spacing.l,
   },
   playButton: {
-    width: spacing.xxxl,
-    height: spacing.xxxl,
-    borderRadius: spacing.l,
-    backgroundColor: colors.background,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: palette.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: spacing.xxs,
+    shadowRadius: 4,
     elevation: 2,
   },
   playerInfo: {
     flex: 1,
-    gap: spacing.xxxs,
+    gap: 6,
   },
   playerTitle: {
-    color: colors.primary,
+    color: '#BF5F0A', // var(--Orange-50)
     fontFamily: typography.fonts.inter.semiBold,
+    fontSize: 14,
+    lineHeight: 14,
   },
   progressBar: {
-    height: spacing.xxs,
-    backgroundColor: colors.border,
-    borderRadius: spacing.xxxs,
+    height: 4,
+    backgroundColor: '#FFD8B2', // Track color estimate
+    borderRadius: 2,
     overflow: 'hidden',
   },
   progressFill: {
     width: '40%',
     height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: spacing.xxxs,
+    backgroundColor: '#BF5F0A',
+    borderRadius: 2,
   },
   timeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   timeText: {
-    color: colors.textSecondary,
+    color: '#8E8E93',
+    fontFamily: typography.fonts.inter.medium,
+    fontSize: 12,
   },
   // ── Moments ──
   momentRow: {
