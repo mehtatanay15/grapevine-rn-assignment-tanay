@@ -1,7 +1,27 @@
 [
   {
-    "id": "1",
+    "id": "phonepe",
     "name": "PhonePe",
-    "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/PhonePe_Logo.svg/512px-PhonePe_Logo.svg.png"
+    "logoUrl": null
+  },
+  {
+    "id": "amazon",
+    "name": "Amazon",
+    "logoUrl": null
+  },
+  {
+    "id": "google",
+    "name": "Google",
+    "logoUrl": null
+  },
+  {
+    "id": "microsoft",
+    "name": "Microsoft",
+    "logoUrl": null
+  },
+  {
+    "id": "meta",
+    "name": "Meta",
+    "logoUrl": null
   }
 ]

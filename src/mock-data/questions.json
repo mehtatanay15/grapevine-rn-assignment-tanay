@@ -2,11 +2,51 @@
   {
     "id": "q1",
     "questionNumber": 1,
-    "companyId": "1",
+    "companyId": "phonepe",
     "companyName": "PhonePe",
-    "companyLogoUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/PhonePe_Logo.svg/512px-PhonePe_Logo.svg.png",
+    "companyLogoUrl": null,
     "text": "API latency is variable & app is sluggish. How do you design UI safely?",
     "durationMinutes": 2,
     "completedTodayCount": 2312
+  },
+  {
+    "id": "q2",
+    "questionNumber": 2,
+    "companyId": "amazon",
+    "companyName": "Amazon",
+    "companyLogoUrl": null,
+    "text": "How would you design a scalable notification system for millions of users?",
+    "durationMinutes": 3,
+    "completedTodayCount": 1847
+  },
+  {
+    "id": "q3",
+    "questionNumber": 3,
+    "companyId": "phonepe",
+    "companyName": "PhonePe",
+    "companyLogoUrl": null,
+    "text": "Walk me through how you would implement offline-first data sync in a mobile app.",
+    "durationMinutes": 2,
+    "completedTodayCount": 984
+  },
+  {
+    "id": "q4",
+    "questionNumber": 4,
+    "companyId": "google",
+    "companyName": "Google",
+    "companyLogoUrl": null,
+    "text": "How do you optimise the rendering performance of a complex React Native list?",
+    "durationMinutes": 3,
+    "completedTodayCount": 621
+  },
+  {
+    "id": "q5",
+    "questionNumber": 5,
+    "companyId": "microsoft",
+    "companyName": "Microsoft",
+    "companyLogoUrl": null,
+    "text": "Describe your approach to handling authentication tokens securely on mobile.",
+    "durationMinutes": 2,
+    "completedTodayCount": 453
   }
 ]

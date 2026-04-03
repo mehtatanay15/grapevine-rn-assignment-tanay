@@ -2,18 +2,45 @@
   "questionId": "q1",
   "questionText": "API latency is variable & app is sluggish. How do you design UI safely?",
   "companyName": "PhonePe",
+  "companyLogoUrl": null,
   "smartSummary": {
     "whatWorkedWell": [
-      "Add your bullet points here based on the Figma"
+      "Clearly articulated the concept of optimistic UI updates to keep the interface responsive during slow network calls.",
+      "Demonstrated strong knowledge of skeleton screens and shimmer loaders as loading state patterns.",
+      "Correctly identified debouncing and request cancellation as key techniques to avoid UI race conditions.",
+      "Gave a solid example of retry logic with exponential back-off to handle intermittent failures gracefully."
     ],
     "overallTakeaways": [
-      "Add your bullet points here based on the Figma"
+      "Consider elaborating on how you would handle error boundaries at the component level to prevent full-screen crashes.",
+      "Mention cache-first strategies (e.g. SWR / React Query) to immediately show stale data while refreshing in background.",
+      "Discuss the role of network quality detection (e.g. NetInfo) to adapt UI behaviour proactively.",
+      "Explore how you would test latency-related edge cases using tools like Charles Proxy or network throttling."
     ]
   },
   "keyMoments": [
     {
-      "timestamp": "01:37",
-      "description": "Add key moment description here",
+      "timestamp": "00:37",
+      "description": "Correctly explained how public/private keys enable secure data transmission.",
+      "type": "positive"
+    },
+    {
+      "timestamp": "01:03",
+      "description": "Clearly articulated that passwords can be easily compromised without encryption.",
+      "type": "positive"
+    },
+    {
+      "timestamp": "01:40",
+      "description": "Accurately described the handshake process as fundamental to establishing security.",
+      "type": "positive"
+    },
+    {
+      "timestamp": "02:28",
+      "description": "Struggled to name other security guarantees beyond confidentiality when prompted.",
+      "type": "negative"
+    },
+    {
+      "timestamp": "03:15",
+      "description": "Recovered well by connecting TLS to real-world HTTPS usage in mobile apps.",
       "type": "positive"
     }
   ],
