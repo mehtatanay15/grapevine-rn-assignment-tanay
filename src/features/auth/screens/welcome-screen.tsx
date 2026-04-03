@@ -111,11 +111,12 @@ export function OrangePrimaryButton({
     // Wrapper is tall enough to show the shadow below the surface
     <View style={{ width, height: BTN_H + BTN_SHADOW }}>
 
-      {/* ── Shadow rect — static, fills full wrapper ── */}
+      {/* ── Shadow rect — static, identical height to surface shifted down ── */}
       <View
         style={{
           position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
+          top: BTN_SHADOW, left: 0, right: 0,
+          height: BTN_H,
           borderRadius: spacing.m,
           backgroundColor: shadowBg,
         }}

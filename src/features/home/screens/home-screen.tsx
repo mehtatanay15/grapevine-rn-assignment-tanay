@@ -8,6 +8,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+import { Pressable } from 'react-native';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 import { colors, palette } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
@@ -111,6 +119,7 @@ export function HomeScreen() {
           keyExtractor={keyExtractor}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          // @ts-ignore - types can sometimes fail to infer ListItem accurately for extraData
           estimatedItemSize={100}
           extraData={selectedQuestion?.id}
         />
@@ -124,6 +133,11 @@ export function HomeScreen() {
 /* ─── Header Component ──────────────────────────────────────────────────────── */
 
 function HomeHeader() {
+  const pressValue = useSharedValue(0);
+  const animatedSurfaceStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: pressValue.value }],
+  }));
+
   return (
     <View style={styles.headerContainer}>
       {/* Top bar: Brand + streak + menu */}
@@ -160,25 +174,32 @@ function HomeHeader() {
       </View>
 
       {/* Context card */}
-      <View style={styles.contextCard}>
-        <Image 
-          source={require('../../../../assets/images/Bicep.png')} 
-          style={styles.contextIconLeft} 
-          contentFit="contain" 
-        />
-        <View style={styles.contextTextContainer}>
-          <AppText style={styles.contextLabel}>
-            Practicing Top 50 Questions for
-          </AppText>
-          <AppText style={styles.contextTitle}>
-            Big Tech Companies
-          </AppText>
-        </View>
-        <Image 
-          source={require('../../../../assets/images/chevron-down.png')} 
-          style={styles.contextIconRight} 
-          contentFit="contain" 
-        />
+      <View style={styles.contextCardWrapper}>
+        <View style={styles.contextCardShadow} />
+        <AnimatedPressable 
+          onPressIn={() => { pressValue.value = withSpring(4, { damping: 18, stiffness: 380, mass: 0.6 }); }}
+          onPressOut={() => { pressValue.value = withSpring(0, { damping: 14, stiffness: 280, mass: 0.6 }); }}
+          style={[styles.contextCardSurface, animatedSurfaceStyle]}
+        >
+          <Image 
+            source={require('../../../../assets/images/Bicep.png')} 
+            style={styles.contextIconLeft} 
+            contentFit="contain" 
+          />
+          <View style={styles.contextTextContainer}>
+            <AppText style={styles.contextLabel}>
+              Practicing Top 50 Questions for
+            </AppText>
+            <AppText style={styles.contextTitle}>
+              Big Tech Companies
+            </AppText>
+          </View>
+          <Image 
+            source={require('../../../../assets/images/chevron-down.png')} 
+            style={styles.contextIconRight} 
+            contentFit="contain" 
+          />
+        </AnimatedPressable>
       </View>
     </View>
   );
@@ -323,17 +344,26 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E5E5EA', // var(--Grey20)
   },
   // ── Context Card ──
-  contextCard: {
+  contextCardWrapper: {
     width: 361,
     height: 76,
+    position: 'relative',
+  },
+  contextCardShadow: {
+    position: 'absolute',
+    top: 4, left: 0, right: 0, bottom: 0,
+    backgroundColor: '#BF9C26',
+    borderRadius: 24,
+  },
+  contextCardSurface: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 4,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF6D9', // var(--Yellow-10)
+    backgroundColor: '#FFF6D9',
     borderRadius: 24,
     padding: 16,
     gap: 12,
-    borderBottomWidth: 4,
-    borderBottomColor: '#BF9C26', // var(--Yellow50)
   },
   contextIconLeft: {
     width: 32,

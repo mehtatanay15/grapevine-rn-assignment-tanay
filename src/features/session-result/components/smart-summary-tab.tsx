@@ -1,3 +1,4 @@
+import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
 
@@ -11,7 +12,7 @@ interface SmartSummaryTabProps {
   data: SmartSummary;
 }
 
-export const SmartSummaryTab = memo(function SmartSummaryTab({ data }: SmartSummaryTabProps) {
+export const SmartSummaryTab = React.memo(function SmartSummaryTab({ data }: SmartSummaryTabProps) {
   return (
     <ScrollView
       style={styles.scroll}

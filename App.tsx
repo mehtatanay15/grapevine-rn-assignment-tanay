@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
   useFonts,
   Inter_300Light,
@@ -34,7 +34,7 @@ export default function App() {
   }, [fontsLoaded]);
 
   if (!fontsLoaded) {
-    return null;
+    return <View style={styles.root} />;
   }
 
   return (

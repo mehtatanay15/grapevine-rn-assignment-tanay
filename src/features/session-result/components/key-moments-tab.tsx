@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import React from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -21,7 +21,7 @@ function formatDuration(seconds: number) {
   return `${m}:${s}`;
 }
 
-export const KeyMomentsTab = memo(function KeyMomentsTab({
+export const KeyMomentsTab = React.memo(function KeyMomentsTab({
   moments,
   audioDurationSeconds,
 }: KeyMomentsTabProps) {

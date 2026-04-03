@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { View, StyleSheet, Text, Pressable, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import Animated, {
@@ -115,7 +115,7 @@ function ActionButton({ title, titleColor, bg, shadowBg, icon, onPress }: any) {
   );
 }
 
-export const QuestionCard = memo(function QuestionCard({
+export const QuestionCard = React.memo(function QuestionCard({
   question,
   state,
   showStart = false,

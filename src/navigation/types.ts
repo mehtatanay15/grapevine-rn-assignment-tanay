@@ -20,6 +20,8 @@ export type MainTabParamList = {
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
+  Settings: undefined;
+  Store: undefined;
   SessionResult: { questionId: string };
 };
 

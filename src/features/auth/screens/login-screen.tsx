@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -122,28 +123,35 @@ export function LoginScreen() {
           {/* ── OTP ──────────────────────────────────────────────────────────
               Figma: width:304 height:52 gap:8
               6 boxes × 44 + 5 × 8 gap = 264 + 40 = 304 ✓ ──────────── */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Enter the OTP</Text>
-            <View style={styles.otpRow}>
-              {otp.map((digit, i) => (
-                <TextInput
-                  key={i}
-                  ref={(r) => { otpRefs.current[i] = r; }}
-                  style={[styles.otpBox, digit ? styles.otpBoxFilled : null]}
-                  value={digit}
-                  onChangeText={(t) => handleOtpChange(t, i)}
-                  onKeyPress={({ nativeEvent }) => handleOtpKeyPress(nativeEvent.key, i)}
-                  keyboardType="number-pad"
-                  maxLength={1}
-                  textAlign="center"
-                  // Prevent OS from inflating/deflating font with extra padding
-                  textAlignVertical="center"
-                  includeFontPadding={false}
-                  accessibilityLabel={`OTP digit ${i + 1}`}
-                />
-              ))}
-            </View>
-          </View>
+          {isPhoneValid && (
+            <Animated.View 
+              style={styles.fieldGroup}
+              entering={FadeInDown.duration(400).springify()}
+              exiting={FadeOut.duration(200)}
+            >
+              <Text style={styles.fieldLabel}>Enter the OTP</Text>
+              <View style={styles.otpRow}>
+                {otp.map((digit, i) => (
+                  <TextInput
+                    key={i}
+                    ref={(r) => { otpRefs.current[i] = r; }}
+                    style={[styles.otpBox, digit ? styles.otpBoxFilled : null]}
+                    value={digit}
+                    onChangeText={(t) => handleOtpChange(t, i)}
+                    onKeyPress={({ nativeEvent }) => handleOtpKeyPress(nativeEvent.key, i)}
+                    keyboardType="number-pad"
+                    maxLength={1}
+                    textAlign="center"
+                    // Prevent OS from inflating/deflating font with extra padding
+                    textAlignVertical="center"
+                    // @ts-ignore - includeFontPadding is Android only but sometimes errors in generic typings
+                    includeFontPadding={Platform.OS === 'android' ? false : undefined}
+                    accessibilityLabel={`OTP digit ${i + 1}`}
+                  />
+                ))}
+              </View>
+            </Animated.View>
+          )}
 
         </ScrollView>
 
