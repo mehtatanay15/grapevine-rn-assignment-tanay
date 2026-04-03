@@ -20,13 +20,13 @@ The demo video and APK file are both available in the Google Drive folder below:
 |:---:|:---:|:---:|
 | ![Splash](./screenshots/splash.png) | ![Welcome](./screenshots/welcome.png) | ![Login](./screenshots/login.png) |
 
-| Home | Home (Open State) | Session Result |
+| Home | Home (Open State) | Feedback |
 |:---:|:---:|:---:|
-| ![Home](./screenshots/home.png) | ![Home Open State](./screenshots/home-open.png) | ![Session Result](./screenshots/session-result.png) |
+| ![Home](./screenshots/home.png) | ![Home Open State](./screenshots/home-open.png) | ![Feedback](./screenshots/feedback.png) |
 
-| Smart Summary | Key Moments | Settings |
+| Highlights | Settings | |
 |:---:|:---:|:---:|
-| ![Smart Summary](./screenshots/smart-summary.png) | ![Key Moments](./screenshots/key-moments.png) | ![Settings](./screenshots/settings.png) |
+| ![Highlights](./screenshots/highlights.png) | ![Settings](./screenshots/settings.png) | |
 
 > Save your screenshots in the `/screenshots` folder at the project root using the filenames listed above.
 

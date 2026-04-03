@@ -1,5 +1,11 @@
 # NOTES.md — Ready! Assignment
 
+## Research & Preparation
+
+Before building, I downloaded and used the **ReadyAI** app from the Play Store to get hands-on depth on the app's user interface and user experience. This helped me understand the overall design language, interaction patterns, micro-animations, and the general feel of the product — which directly influenced decisions around the 3D button system, haptic feedback, and the premium look and feel of the implementation.
+
+---
+
 ## Trade-offs & Decisions
 
 ### 1. Question Open State: Inline Expansion vs Bottom Sheet
@@ -9,10 +15,10 @@ The assignment suggests using `@gorhom/bottom-sheet` for the Home open state. Af
 All primary buttons use a custom "3D press" architecture built with `react-native-reanimated`:
 - A **static shadow rect** positioned below the surface
 - An **`AnimatedPressable` surface** that translates down `withSpring` on press, covering the shadow
-- This produces a tactile, physical pushdown effect matching premium mobile app feel
+- This produces a tactile, physical pushdown effect matching the premium feel of the Grapevine product
 
 ### 3. FlashList v2 — `estimatedItemSize` Type Override
-The installed `@shopify/flash-list@2.0.2` has a type regression where `estimatedItemSize` is not recognized in `FlashListProps`. The prop is required at runtime for performance. Applied `@ts-ignore` to suppress the IDE error while keeping the runtime behavior correct.
+The installed `@shopify/flash-list@2.0.2` has a type regression where `estimatedItemSize` is not recognised in `FlashListProps`. The prop is required at runtime for performance. Applied `@ts-ignore` to suppress the IDE error while keeping the runtime behaviour correct.
 
 ### 4. Navigation: `reset()` for Auth Transitions
 After login and log-out, `navigation.reset()` is used instead of `navigation.navigate()`. This prevents the user from pressing the Back button to return to the auth screens after login (or to the main app after logout) — correct UX for auth flow transitions.
@@ -36,7 +42,10 @@ The OTP input section is hidden until the user enters a valid 10-digit phone num
 Company logos are loaded from `assets/images/Companies/` as local assets. The `companyLogoUrl` field in the JSON is `null` (as provided in the skeleton) — the components fall back to styled initials badges when the URL is null, making it trivial to swap in real URLs later.
 
 ### 11. Animated Tab Indicator on Session Result
-The active tab underline on the Session Result screen slides smoothly between tabs using `withTiming` and a shared `translateX` value, matching the Figma interactive prototype behavior.
+The active tab underline on the Session Result screen slides smoothly between tabs using `withTiming` and a shared `translateX` value, matching the Figma interactive prototype behaviour.
+
+### 12. Native Splash Screen
+The native splash screen image was removed from `app.json` (set to a plain white background) to eliminate a double-logo effect. The custom animated `SplashScreen` component is the sole branded intro, which fades in the logo with a spring animation before navigating to the Welcome screen.
 
 ---
 
@@ -51,14 +60,3 @@ The active tab underline on the Session Result screen slides smoothly between ta
 7. **Pull-to-Refresh** — On the Home screen question list for content refresh UX.
 8. **Deep Link Routing** — So sharing a question link opens the correct question detail screen.
 9. **Proper TypeScript for FlashList** — Use the correct generic typing `FlashList<ListItem>` instead of `@ts-ignore` to ensure long-term type safety.
-
----
-
-## Figma Assumptions
-
-- The **"Asked by PhonePe" pill** on the Session Result header uses a green background — assumed to match `#13BF69` (the same green as the header card).
-- The **yellow context card** on the Home open state uses `#FFD033` — close to an amber/yellow tone. Kept as a documented value since no exact semantic token maps to it.
-- The **social proof banner** is placed after card index 2 (i.e., between Question 3 and Question 4) based on the visible Figma arrangement.
-- The **notification/streak badge** shows "8" as a static count — no real notification system is required per the assignment.
-- The **Home open state arrow pointer** is centered on the number badge of the selected question card. The offset is computed dynamically from the card's `marginLeft` stagger position.
-- The **Settings "New Update" box** was implemented based on the described Figma specs (border-radius 24, surface white, 1px border `#E5E5EA`).
