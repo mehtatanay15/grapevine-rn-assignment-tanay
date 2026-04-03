@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  View,
-  StyleSheet,
-  Text,
-} from 'react-native';
+import { View, StyleSheet, Text, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,7 +8,6 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { Pressable } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
 import { colors, palette } from '@/theme/colors';
@@ -37,22 +32,34 @@ const CONTAINER_TOP = 232;
 const CONTAINER_LEFT = 21;
 
 const BUTTON_WIDTH = 345;
-const BUTTON_HEIGHT = 58;
 const BUTTON_TOP = 670;
 const BUTTON_LEFT = 24;
-const BUTTON_SHADOW_H = 8;
 
 const FOOTER_TOP = 768;
 const FOOTER_LEFT = 24;
 const FOOTER_WIDTH = 345;
 
+// ─── Button constants ─────────────────────────────────────────────────────────
+export const BTN_H = 58;      // surface height
+export const BTN_SHADOW = 8;  // depth of 3-D shadow
+
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-// ─── Shared 3D Orange Button ─────────────────────────────────────────────────
+// ─── OrangePrimaryButton ──────────────────────────────────────────────────────
 /**
- * Reusable 3D orange button used on Welcome & Login screens.
- * Matches Figma: solid #FF6D00 surface, 8 dp #FF5000 bottom shadow,
- * border-radius Rounding/M (16), with optional left icon.
+ * Shared 3-D orange press button.
+ *
+ * Architecture:
+ *   ┌─ wrapper (BTN_H + BTN_SHADOW tall) ─────────────────────────┐
+ *   │  [shadow rect]  — static, fills wrapper, darker orange      │
+ *   │  [surface]      — absolute top:0, height: BTN_H             │
+ *   │                   AnimatedPressable translates Y on press    │
+ *   └─────────────────────────────────────────────────────────────┘
+ *
+ * On rest   : surface at translateY=0  → shadow pokes out BTN_SHADOW below
+ * On press  : surface at translateY=BTN_SHADOW → covers all of shadow → flat
+ *
+ * No overflow:hidden on the surface — avoids descender clipping ("g", "y").
  */
 export function OrangePrimaryButton({
   label,
@@ -68,51 +75,53 @@ export function OrangePrimaryButton({
   showLeftIcon?: boolean;
 }) {
   const translateY = useSharedValue(0);
-  const shadowH = useSharedValue(BUTTON_SHADOW_H);
 
-  const animatedBtn = useAnimatedStyle(() => ({
+  const animatedSurface = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
-  }));
-  const animatedShadow = useAnimatedStyle(() => ({
-    height: shadowH.value,
   }));
 
   const handlePressIn = () => {
     if (disabled) return;
-    translateY.value = withSpring(BUTTON_SHADOW_H - 1, { damping: 20, stiffness: 400 });
-    shadowH.value = withSpring(1, { damping: 20, stiffness: 400 });
+    translateY.value = withSpring(BTN_SHADOW, {
+      damping: 18,
+      stiffness: 380,
+      mass: 0.6,
+    });
   };
+
   const handlePressOut = () => {
-    translateY.value = withSpring(0, { damping: 15, stiffness: 300 });
-    shadowH.value = withSpring(BUTTON_SHADOW_H, { damping: 15, stiffness: 300 });
+    translateY.value = withSpring(0, {
+      damping: 14,
+      stiffness: 280,
+      mass: 0.6,
+    });
   };
+
   const handlePress = () => {
     if (disabled) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onPress();
   };
 
-  const surfaceColor = disabled ? colors.buttonDisabled : '#FF6D00';
-  const shadowColor = disabled ? '#C0C0C0' : '#FF5000';
-  const labelColor = disabled ? colors.textDisabled : palette.white;
+  const surfaceBg = disabled ? colors.buttonDisabled : '#FF6D00';
+  const shadowBg  = disabled ? '#BEBEBE'              : '#FF5000';
+  const textColor = disabled ? colors.textDisabled    : palette.white;
 
   return (
-    <View style={{ width, height: BUTTON_HEIGHT + BUTTON_SHADOW_H }}>
-      {/* 3D shadow layer */}
-      <Animated.View
-        style={[
-          {
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            borderRadius: spacing.m,
-            backgroundColor: shadowColor,
-          },
-          animatedShadow,
-        ]}
+    // Wrapper is tall enough to show the shadow below the surface
+    <View style={{ width, height: BTN_H + BTN_SHADOW }}>
+
+      {/* ── Shadow rect — static, fills full wrapper ── */}
+      <View
+        style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          borderRadius: spacing.m,
+          backgroundColor: shadowBg,
+        }}
       />
-      {/* Button surface */}
+
+      {/* ── Animated surface — sits on top of shadow ── */}
       <AnimatedPressable
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
@@ -122,35 +131,35 @@ export function OrangePrimaryButton({
         accessibilityLabel={label}
         style={[
           {
-            width,
-            height: BUTTON_HEIGHT,
+            position: 'absolute',
+            top: 0, left: 0, right: 0,
+            height: BTN_H,
             borderRadius: spacing.m,
-            backgroundColor: surfaceColor,
+            backgroundColor: surfaceBg,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
-            paddingVertical: spacing.l,
+            // horizontal padding only — vertical centring via alignItems
             paddingHorizontal: spacing.m,
-            gap: spacing.xxs,
-            zIndex: 1,
           },
-          animatedBtn,
+          animatedSurface,
         ]}
       >
         {showLeftIcon && (
           <Ionicons
             name="checkmark-circle-outline"
-            size={20}
-            color={labelColor}
-            style={{ marginRight: 4 }}
+            size={22}
+            color={textColor}
+            style={{ marginRight: 6 }}
           />
         )}
         <Text
           style={{
-            color: labelColor,
+            color: textColor,
             fontFamily: typography.fonts.inter.semiBold,
             fontSize: typography.sizes.m,
-            letterSpacing: -0.16,
+            // no letterSpacing restriction that could clip glyphs
+            includeFontPadding: false,
           }}
         >
           {label}
@@ -178,13 +187,13 @@ export function WelcomeScreen({ navigation }: Props) {
       {/* Illustration — 348×330 @ top:232 left:21 */}
       <Image
         source={CONTAINER_IMG}
-        style={styles.container}
+        style={styles.containerImg}
         contentFit="contain"
         cachePolicy="memory-disk"
         accessibilityLabel="Practice Top Interview Questions with AI illustration"
       />
 
-      {/* CTA Button — 345×58 @ top:670 left:24 */}
+      {/* CTA — 345×(58+8) @ top:670 left:24 */}
       <View style={styles.buttonPosition}>
         <OrangePrimaryButton
           label="Let's go"
@@ -194,7 +203,7 @@ export function WelcomeScreen({ navigation }: Props) {
         />
       </View>
 
-      {/* Footer — 345×34 @ top:768 left:24 */}
+      {/* Footer — width:345 @ top:768 left:24 */}
       <View style={styles.footerPosition}>
         <Text style={styles.footerText}>
           {'By continuing, you acknowledge agreeing to our '}
@@ -207,6 +216,7 @@ export function WelcomeScreen({ navigation }: Props) {
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -219,7 +229,7 @@ const styles = StyleSheet.create({
     width: LOGO_WIDTH,
     height: LOGO_HEIGHT,
   },
-  container: {
+  containerImg: {
     position: 'absolute',
     top: CONTAINER_TOP,
     left: CONTAINER_LEFT,
@@ -243,7 +253,6 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.s,
     color: '#6C6C70',
     textAlign: 'center',
-    letterSpacing: -0.14,
     lineHeight: 18,
   },
   footerLink: {
