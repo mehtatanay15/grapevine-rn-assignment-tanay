@@ -1,19 +1,21 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { Image } from 'expo-image';
 import { FlashList } from '@shopify/flash-list';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as Haptics from 'expo-haptics';
 
 import { colors, palette } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import { AppText } from '@/components/ui/app-text';
 import { SafeScreen } from '@/components/ui/safe-screen';
+import { ScalePressable } from '@/components/ui/animated-pressable';
 import { QuestionCard } from '@/features/home/components/question-card';
-import { QuestionBottomSheet } from '@/features/home/components/question-bottom-sheet';
 import type { Question, QuestionCardState } from '@/features/home/types';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -50,20 +52,16 @@ export function HomeScreen() {
   }, [questions]);
 
   const handleQuestionPress = useCallback((question: Question) => {
-    setSelectedQuestion(question);
-    bottomSheetRef.current?.snapToIndex(0);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Toggle the selected question
+    setSelectedQuestion((prev) => (prev?.id === question.id ? null : question));
   }, []);
 
   const handleFeedbackPress = useCallback(() => {
-    bottomSheetRef.current?.close();
     if (selectedQuestion) {
       navigation.navigate('SessionResult', { questionId: selectedQuestion.id });
     }
   }, [selectedQuestion, navigation]);
-
-  const handleBottomSheetClose = useCallback(() => {
-    setSelectedQuestion(null);
-  }, []);
 
   const renderItem = useCallback(
     ({ item }: { item: ListItem }) => {
@@ -77,17 +75,19 @@ export function HomeScreen() {
         const q = item.data;
         const state = getQuestionState(q.questionNumber - 1);
         return (
-          <QuestionCard
-            question={q}
-            state={state}
-            showStart={q.questionNumber === 1}
-            onPress={handleQuestionPress}
-          />
+            <QuestionCard
+              question={q}
+              state={state}
+              showStart={state === 'active'}
+              isExpanded={selectedQuestion?.id === q.id}
+              onPress={handleQuestionPress}
+              onFeedbackPress={handleFeedbackPress}
+            />
         );
       }
       return null;
     },
-    [handleQuestionPress],
+    [handleQuestionPress, selectedQuestion?.id],
   );
 
   const keyExtractor = useCallback(
@@ -112,15 +112,11 @@ export function HomeScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           estimatedItemSize={100}
+          extraData={selectedQuestion?.id}
         />
       </View>
 
-      <QuestionBottomSheet
-        question={selectedQuestion}
-        bottomSheetRef={bottomSheetRef}
-        onFeedbackPress={handleFeedbackPress}
-        onClose={handleBottomSheetClose}
-      />
+      <BottomNav />
     </SafeScreen>
   );
 }
@@ -132,14 +128,19 @@ function HomeHeader() {
     <View style={styles.headerContainer}>
       {/* Top bar: Brand + streak + menu */}
       <View style={styles.topBar}>
-        <AppText variant="h2" style={styles.brandText}>
-          Ready!
-        </AppText>
+        <Image
+          source={require('../../../../assets/images/logo.png')}
+          style={styles.logo}
+          contentFit="contain"
+          cachePolicy="memory-disk"
+        />
         <View style={styles.topBarRight}>
           <View style={styles.streakBadge}>
-            <AppText variant="labelSm" style={styles.streakIcon}>
-              ⚡
-            </AppText>
+            <Image 
+              source={require('../../../../assets/images/lightning.png')} 
+              style={{ width: 14, height: 18 }} 
+              contentFit="contain" 
+            />
             <AppText variant="labelMd" style={styles.streakCount}>
               8
             </AppText>
@@ -149,25 +150,35 @@ function HomeHeader() {
             accessibilityRole="button"
             accessibilityLabel="Open menu"
           >
-            <Ionicons name="menu" size={24} color={colors.textPrimary} />
+            <Image 
+              source={require('../../../../assets/images/burger.png')} 
+              style={{ width: 20, height: 16 }} 
+              contentFit="contain" 
+            />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Context card */}
       <View style={styles.contextCard}>
-        <AppText variant="h3" style={styles.contextEmoji}>
-          💪
-        </AppText>
+        <Image 
+          source={require('../../../../assets/images/Bicep.png')} 
+          style={styles.contextIconLeft} 
+          contentFit="contain" 
+        />
         <View style={styles.contextTextContainer}>
-          <AppText variant="bodySm" style={styles.contextLabel}>
+          <AppText style={styles.contextLabel}>
             Practicing Top 50 Questions for
           </AppText>
-          <AppText variant="labelLg" style={styles.contextTitle}>
+          <AppText style={styles.contextTitle}>
             Big Tech Companies
           </AppText>
         </View>
-        <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
+        <Image 
+          source={require('../../../../assets/images/chevron-down.png')} 
+          style={styles.contextIconRight} 
+          contentFit="contain" 
+        />
       </View>
     </View>
   );
@@ -178,19 +189,61 @@ function HomeHeader() {
 function SocialProofBanner() {
   return (
     <View style={styles.socialProofContainer}>
-      <View style={styles.socialProofBorder} />
       <View style={styles.socialProofContent}>
-        <AppText variant="labelSm" style={styles.socialProofIcon}>
-          🏅
-        </AppText>
-        <AppText variant="caption" style={styles.socialProofText}>
-          2,312 users completed Question 3 today
-        </AppText>
-        <AppText variant="labelSm" style={styles.socialProofIcon}>
-          🏅
-        </AppText>
+         <View style={styles.socialProofBorderTop} />
+         <View style={styles.socialProofInnerRow}>
+            <Image 
+              source={require('../../../../assets/images/flag.png')} 
+              style={styles.socialProofFlag} 
+              contentFit="contain" 
+            />
+            <AppText style={styles.socialProofText}>
+              2,312 users completed Question 3 today
+            </AppText>
+            <Image 
+              source={require('../../../../assets/images/flag.png')} 
+              style={styles.socialProofFlag} 
+              contentFit="contain" 
+            />
+        </View>
+        <View style={styles.socialProofBorderBottom} />
       </View>
-      <View style={styles.socialProofBorder} />
+    </View>
+  );
+}
+
+/* ─── Bottom Nav ────────────────────────────────────────────────────────────── */
+
+function BottomNav() {
+  return (
+    <View style={styles.bottomNavContainer}>
+      <ScalePressable scaleValue={0.96} accessibilityLabel="Home and Settings navigation">
+        <View style={styles.navCapsule}>
+          <Image 
+            source={require('../../../../assets/images/Home-button.png')} 
+            style={styles.navIcon} 
+            contentFit="contain" 
+            cachePolicy="memory-disk" 
+          />
+          <Image 
+            source={require('../../../../assets/images/Settings-button.png')} 
+            style={styles.navIcon} 
+            contentFit="contain" 
+            cachePolicy="memory-disk" 
+          />
+        </View>
+      </ScalePressable>
+      
+      <ScalePressable scaleValue={0.96} accessibilityLabel="Store navigation">
+        <View style={styles.storeCapsule}>
+          <Image 
+            source={require('../../../../assets/images/Store-button.png')} 
+            style={styles.navIcon} 
+            contentFit="contain" 
+            cachePolicy="memory-disk" 
+          />
+        </View>
+      </ScalePressable>
     </View>
   );
 }
@@ -198,105 +251,203 @@ function SocialProofBanner() {
 const styles = StyleSheet.create({
   listContainer: {
     flex: 1,
+    backgroundColor: '#FAFAFA', // Optional, if needed
   },
   listContent: {
-    paddingBottom: spacing.xxl,
+    paddingBottom: 140, // Increased to avoid BottomNav overlap
   },
   // ── Header ──
   headerContainer: {
-    paddingHorizontal: spacing.screenPadding,
+    alignItems: 'center',
     paddingBottom: spacing.l,
   },
   topBar: {
+    width: 393,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: spacing.m,
+    paddingTop: 10,
+    paddingRight: 20,
+    paddingBottom: 10,
+    paddingLeft: 20,
+    backgroundColor: '#FFFFFF',
+    marginBottom: spacing.l,
   },
-  brandText: {
-    color: colors.primary,
-    fontFamily: typography.fonts.inter.bold,
-    fontSize: typography.sizes.xxl,
+  logo: {
+    width: 94,
+    height: 31,
   },
   topBarRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.s,
+    gap: 12,
   },
   streakBadge: {
+    width: 49,
+    height: 36,
+    paddingTop: 8,
+    paddingRight: 12,
+    paddingBottom: 8,
+    paddingLeft: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.streakBadgeBg,
-    borderRadius: spacing.l,
-    paddingHorizontal: spacing.s,
-    paddingVertical: spacing.xxs,
-    gap: spacing.xxxs,
-  },
-  streakIcon: {
-    fontSize: typography.sizes.s,
+    justifyContent: 'center',
+    backgroundColor: '#57D997', // var(--Green-30)
+    borderRadius: 28, // Rounding/XXXL
+    borderBottomWidth: 4,
+    borderBottomColor: '#13BF69', // var(--Green40)
+    gap: 2,
   },
   streakCount: {
-    color: colors.streakBadgeText,
-    fontFamily: typography.fonts.inter.bold,
+    color: '#FFFFFF',
+    fontFamily: typography.fonts.inter.semiBold,
+    fontSize: 16,
   },
   menuButton: {
-    width: spacing.xxxl,
-    height: spacing.xxxl,
-    borderRadius: spacing.l,
-    borderWidth: 1,
-    borderColor: colors.border,
+    width: 40,
+    height: 36,
+    paddingTop: 8,
+    paddingRight: 12,
+    paddingBottom: 8,
+    paddingLeft: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#F5F5F8', // var(--Grey-10)
+    borderRadius: 28,
+    borderBottomWidth: 4,
+    borderBottomColor: '#E5E5EA', // var(--Grey20)
   },
   // ── Context Card ──
   contextCard: {
+    width: 361,
+    height: 76,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cardNextBg,
-    borderRadius: spacing.cardRadius,
-    padding: spacing.m,
-    gap: spacing.s,
-    borderWidth: 1,
-    borderColor: colors.cardNextBorder,
+    backgroundColor: '#FFF6D9', // var(--Yellow-10)
+    borderRadius: 24,
+    padding: 16,
+    gap: 12,
+    borderBottomWidth: 4,
+    borderBottomColor: '#BF9C26', // var(--Yellow50)
   },
-  contextEmoji: {
-    fontSize: 28,
+  contextIconLeft: {
+    width: 32,
+    height: 32,
   },
   contextTextContainer: {
     flex: 1,
+    flexDirection: 'column',
+    gap: 2,
   },
   contextLabel: {
-    color: colors.textSecondary,
-    fontSize: typography.sizes.xs,
+    color: '#48484A', // var(--Grey-60)
+    fontFamily: typography.fonts.inter.medium,
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: 0,
   },
   contextTitle: {
-    color: colors.textPrimary,
-    fontFamily: typography.fonts.inter.bold,
+    color: '#1C1C1E', // var(--Grey-80)
+    fontFamily: typography.fonts.inter.semiBold,
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: 0,
+  },
+  contextIconRight: {
+    width: 24,
+    height: 24,
   },
   // ── Social Proof ──
   socialProofContainer: {
-    paddingHorizontal: spacing.screenPadding,
-    paddingVertical: spacing.m,
-    gap: spacing.xs,
-  },
-  socialProofBorder: {
-    height: 1,
-    borderStyle: 'dashed',
-    borderWidth: 1,
-    borderColor: colors.cardNextBorder,
+    alignItems: 'center',
+    marginVertical: spacing.s,
   },
   socialProofContent: {
+    width: 361,
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  socialProofInnerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.xs,
+    gap: 12,
+    paddingVertical: 12,
   },
-  socialProofIcon: {
-    fontSize: typography.sizes.m,
+  socialProofBorderTop: {
+    width: '100%',
+    height: 1,
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: '#BF9C26',
+  },
+  socialProofBorderBottom: {
+    width: '100%',
+    height: 1,
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: '#BF9C26',
+  },
+  socialProofFlag: {
+    width: 20,
+    height: 20,
   },
   socialProofText: {
-    color: colors.textSecondary,
-    fontFamily: typography.fonts.inter.medium,
+    fontFamily: typography.fonts.inter.bold,
+    fontSize: 14,
+    color: '#BF9C26', // var(--Yellow-50)
+    letterSpacing: -0.14,
+  },
+  // ── Bottom Nav ──
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 34,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    zIndex: 20,
+  },
+  navCapsule: {
+    width: 172,
+    height: 68,
+    paddingTop: 5,
+    paddingRight: 16,
+    paddingBottom: 5,
+    paddingLeft: 16,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 24,
+    borderRadius: 99999,
+    borderWidth: 1,
+    borderColor: '#EFEFF4',
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 4, // Replicating solid shadow 0px 4px 0px 0px #EFEFF4
+    borderBottomColor: '#EFEFF4', 
+  },
+  storeCapsule: {
+    width: 68,
+    height: 68,
+    paddingTop: 6,
+    paddingRight: 5,
+    paddingBottom: 6,
+    paddingLeft: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 99999,
+    borderWidth: 1,
+    borderColor: '#B2D9FF',
+    backgroundColor: '#E5F2FF',
+    borderBottomWidth: 4, // Solid shadow 4px
+    borderBottomColor: '#B2D9FF',
+  },
+  navIcon: {
+    width: 48, // estimated bounds fitting inside capsule spacing
+    height: 48,
   },
 });

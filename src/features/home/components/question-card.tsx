@@ -1,132 +1,256 @@
 import React, { memo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text, Pressable, useWindowDimensions } from 'react-native';
+import { Image } from 'expo-image';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 
-import { colors, palette } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import { AppText } from '@/components/ui/app-text';
-import { ScalePressable } from '@/components/ui/animated-pressable';
 import type { Question, QuestionCardState } from '@/features/home/types';
 
 interface QuestionCardProps {
   question: Question;
   state: QuestionCardState;
   showStart?: boolean;
+  isExpanded?: boolean;
   onPress: (question: Question) => void;
+  onFeedbackPress?: () => void;
 }
 
-const STATE_THEME: Record<
+const COMPANY_LOGOS: Record<string, any> = {
+  phonepe: require('../../../../assets/images/Companies/phonepe.png'),
+  amazon: require('../../../../assets/images/Companies/amazon.png'),
+  google: require('../../../../assets/images/Companies/google.png'),
+  microsoft: require('../../../../assets/images/Companies/microsoft.png'),
+  facebook: require('../../../../assets/images/Companies/facebook.png'),
+};
+
+const THEME_MAP: Record<
   QuestionCardState,
-  { bg: string; border: string; badgeBg: string; badgeText: string; shadowBg: string }
+  { baseBg: string; rightBg: string; shadowBg: string }
 > = {
   active: {
-    bg: colors.cardActiveBg,
-    border: colors.cardActiveBorder,
-    badgeBg: colors.cardActiveBadge,
-    badgeText: colors.textInverse,
-    shadowBg: colors.cardActiveBorder,
+    baseBg: '#D8F7C2',
+    rightBg: '#79D634',
+    shadowBg: '#00AA2B',
   },
   next: {
-    bg: colors.cardNextBg,
-    border: colors.cardNextBorder,
-    badgeBg: colors.cardNextBadge,
-    badgeText: colors.textInverse,
-    shadowBg: colors.cardNextBorder,
+    baseBg: '#FFF0BF',
+    rightBg: '#FFD033',
+    shadowBg: '#C19400',
   },
   locked: {
-    bg: colors.cardLockedBg,
-    border: colors.cardLockedBorder,
-    badgeBg: colors.cardLockedBadge,
-    badgeText: colors.textInverse,
-    shadowBg: colors.cardLockedShadow,
+    baseBg: '#EFEFF4',
+    rightBg: '#D1D1D6',
+    shadowBg: '#8E8E93',
   },
 };
 
-/**
- * Calculates alignment/margin for the winding-path stagger effect.
- * Index 0: left-aligned
- * Index 1: center-right
- * Index 2+: right-aligned
- */
-export function getStaggerStyle(index: number) {
-  if (index === 0) {
-    return {
-      alignSelf: 'flex-start' as const,
-      marginLeft: spacing.screenPadding,
-      marginRight: spacing.giga + spacing.xl,
-    };
-  }
-  if (index === 1) {
-    return {
-      alignSelf: 'center' as const,
-      marginLeft: spacing.xxxl,
-      marginRight: spacing.screenPadding,
-    };
-  }
-  // Index 2+ : right-aligned
-  return {
-    alignSelf: 'flex-end' as const,
-    marginLeft: spacing.giga + spacing.m,
-    marginRight: spacing.screenPadding,
+const BASE_W = 206;
+const BASE_H = 73;
+const RIGHT_W = 74;
+const SHADOW_H = 8;
+const PILL_RADIUS = 30;
+
+function OutlinedNumber({ text }: { text: string }) {
+  const outlineColor = 'rgba(0,0,0,0.6)';
+  const baseStyle = {
+    fontFamily: typography.fonts.inter.bold,
+    fontSize: 36,
+    lineHeight: 36,
+    includeFontPadding: false,
+    textAlign: 'center' as const,
   };
+
+  return (
+    <View style={styles.outlinedNumberContainer}>
+      {/* 
+        Using transforms instead of absolute positional offsets guarantees sub-pixel perfectly centered overlay
+        prevents any dual rendering or fuzzy artifacting issues on Android
+       */}
+      <Text style={[baseStyle, { position: 'absolute', transform: [{ translateX: -1.5 }, { translateY: -1.5 }], color: outlineColor }]}>{text}</Text>
+      <Text style={[baseStyle, { position: 'absolute', transform: [{ translateX: 1.5 }, { translateY: -1.5 }], color: outlineColor }]}>{text}</Text>
+      <Text style={[baseStyle, { position: 'absolute', transform: [{ translateX: -1.5 }, { translateY: 1.5 }], color: outlineColor }]}>{text}</Text>
+      <Text style={[baseStyle, { position: 'absolute', transform: [{ translateX: 1.5 }, { translateY: 1.5 }], color: outlineColor }]}>{text}</Text>
+      <Text style={[baseStyle, { position: 'absolute', transform: [{ translateX: -1.5 }, { translateY: 0 }], color: outlineColor }]}>{text}</Text>
+      <Text style={[baseStyle, { position: 'absolute', transform: [{ translateX: 1.5 }, { translateY: 0 }], color: outlineColor }]}>{text}</Text>
+      <Text style={[baseStyle, { position: 'absolute', transform: [{ translateX: 0 }, { translateY: -1.5 }], color: outlineColor }]}>{text}</Text>
+      <Text style={[baseStyle, { position: 'absolute', transform: [{ translateX: 0 }, { translateY: 1.5 }], color: outlineColor }]}>{text}</Text>
+      <Text style={[baseStyle, { color: '#FFFFFF' }]}>{text}</Text>
+    </View>
+  );
+}
+
+export function getStaggerStyle(index: number) {
+  const staggerMargins = [48, 80, 120, 160, 120, 80, 40, 80, 120, 160];
+  const margin = staggerMargins[index % staggerMargins.length];
+  return { alignSelf: 'flex-start' as const, marginLeft: margin };
+}
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+function ActionButton({ title, titleColor, bg, shadowBg, icon, onPress }: any) {
+  const pressValue = useSharedValue(0);
+  const pressStyle = useAnimatedStyle(() => ({ transform: [{ translateY: pressValue.value }] }));
+  return (
+    <View style={styles.actionBtnWrapper}>
+      <View style={[styles.actionBtnShadow, { backgroundColor: shadowBg }]} />
+      <AnimatedPressable
+        onPressIn={() => { pressValue.value = withSpring(3, { damping: 18, stiffness: 380, mass: 0.6 }); }}
+        onPressOut={() => { pressValue.value = withSpring(0, { damping: 14, stiffness: 280, mass: 0.6 }); }}
+        onPress={onPress}
+        style={[styles.actionBtnSurface, { backgroundColor: bg }, pressStyle]}
+      >
+        <View style={styles.actionRow}>
+          {icon && <Image source={icon} style={{ width: 18, height: 18 }} tintColor={titleColor} />}
+          <Text style={[styles.actionBtnTitle, { color: titleColor }]}>{title}</Text>
+        </View>
+      </AnimatedPressable>
+    </View>
+  );
 }
 
 export const QuestionCard = memo(function QuestionCard({
   question,
   state,
   showStart = false,
+  isExpanded = false,
   onPress,
+  onFeedbackPress,
 }: QuestionCardProps) {
-  const theme = STATE_THEME[state];
+  const theme = THEME_MAP[state];
+  const pressValue = useSharedValue(0);
+
+  const animatedSurfaceStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: pressValue.value }],
+  }));
+
+  const handlePressIn = () => {
+    pressValue.value = withSpring(SHADOW_H, { damping: 18, stiffness: 380, mass: 0.6 });
+  };
+  const handlePressOut = () => {
+    pressValue.value = withSpring(0, { damping: 14, stiffness: 280, mass: 0.6 });
+  };
+  const handlePress = () => onPress(question);
+
+  const stagger = getStaggerStyle(question.questionNumber - 1);
+  const marginL = stagger.marginLeft;
+  // Center of badge = Margin + Base Width - half of Right Width 
+  const badgeCenterOffset = marginL + BASE_W - (RIGHT_W / 2);
 
   return (
-    <View style={[styles.outerWrapper, getStaggerStyle(question.questionNumber - 1)]}>
-      <ScalePressable
-        onPress={() => onPress(question)}
-        accessibilityLabel={`Question ${question.questionNumber} by ${question.companyName}`}
-        scaleValue={0.96}
-      >
-        {/* 3D shadow layer for the pill */}
-        <View
-          style={[
-            styles.pillShadow,
-            { backgroundColor: theme.shadowBg },
-          ]}
-        />
+    <View style={styles.outerWrapper}>
+      {/* Container big enough to hold button + shadow */}
+      <View style={[styles.layoutConstraints, stagger]}>
+        
+        {/* Shadow block */}
+        <View style={[styles.shadowBlock, { backgroundColor: theme.shadowBg }]} />
+        
+        {/* Animated surface */}
+        <AnimatedPressable
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          onPress={handlePress}
+          style={[styles.surfaceBlock, { backgroundColor: theme.baseBg }, animatedSurfaceStyle]}
+        >
+          {/* Complete base overlay mask only if not locked */}
+          {state !== 'locked' && (
+            <Image 
+              source={require('../../../../assets/images/Button/base-mask.png')} 
+              style={StyleSheet.absoluteFillObject} 
+              contentFit="cover" 
+              cachePolicy="memory-disk"
+            />
+          )}
 
-        {/* Main pill surface */}
-        <View style={[styles.pill, { backgroundColor: theme.bg, borderColor: theme.border }]}>
-          {/* Company logo placeholder + name */}
-          <View style={styles.leftSection}>
-            <View style={[styles.logoPlaceholder, { borderColor: theme.border }]}>
-              <AppText variant="labelSm" style={styles.logoText}>
-                {question.companyName.slice(0, 2).toLowerCase()}
-              </AppText>
-            </View>
-            <AppText variant="labelMd" style={styles.companyName}>
+          {/* Left section items */}
+          <View style={styles.leftContent}>
+            <AppText style={styles.companyName}>
               {question.companyName}
             </AppText>
-          </View>
-
-          {/* Number badge */}
-          <View style={[styles.badge, { backgroundColor: theme.badgeBg }]}>
-            {/* Badge shadow */}
-            <View style={[styles.badgeShadow, { backgroundColor: theme.shadowBg }]} />
-            <View style={[styles.badgeInner, { backgroundColor: theme.badgeBg }]}>
-              <AppText variant="h2" style={[styles.badgeNumber, { color: theme.badgeText }]}>
-                {question.questionNumber}
-              </AppText>
+            {/* Logo from assets or placeholder */}
+            <View style={styles.logoCircle}>
+              {COMPANY_LOGOS[question.companyId] ? (
+                <Image 
+                  source={COMPANY_LOGOS[question.companyId]} 
+                  style={{ width: 16, height: 16 }} 
+                  contentFit="contain" 
+                  cachePolicy="memory-disk" 
+                />
+              ) : (
+                <AppText style={styles.logoInitial}>
+                  {question.companyName.charAt(0).toUpperCase()}
+                </AppText>
+              )}
             </View>
           </View>
-        </View>
-      </ScalePressable>
 
-      {/* START tag (only for active card) */}
-      {showStart && (
-        <View style={styles.startTag}>
-          <AppText variant="labelMd" style={styles.startText}>
-            START
-          </AppText>
+          {/* Right section container */}
+          <View style={[styles.rightContainer, { backgroundColor: theme.rightBg }]}>
+            {state !== 'locked' && (
+              <Image 
+                source={require('../../../../assets/images/Button/mask-group.png')} 
+                style={StyleSheet.absoluteFillObject} 
+                contentFit="cover" 
+                cachePolicy="memory-disk"
+              />
+            )}
+            {/* The Number */}
+            <View style={styles.numberCenter}>
+              <OutlinedNumber text={String(question.questionNumber)} />
+            </View>
+          </View>
+          
+        </AnimatedPressable>
+
+        {/* Start tooltip relative to layout wrapper - placed outside surface so it doesn't get masked */}
+        {showStart && !isExpanded && (
+          <View style={styles.startTooltipWrapper}>
+            <View style={styles.startTag}>
+              <AppText style={styles.startText}>START</AppText>
+            </View>
+            <View style={styles.startTooltipArrow} />
+          </View>
+        )}
+      </View>
+
+      {/* Expandable Flow */}
+      {isExpanded && (
+        <View style={styles.expandedWrapper}>
+          <View style={[styles.arrowUp, { left: badgeCenterOffset - 10 }]} />
+          <View style={styles.expandedBox}>
+            <AppText style={styles.dialogText}>{question.text}</AppText>
+            
+            <View style={styles.dialogMetaRow}>
+              <AppText style={styles.dialogMetaText}>Asked by {question.companyName}</AppText>
+              <View style={styles.dialogTimeRow}>
+                <Image source={require('../../../../assets/images/stopwatch.png')} style={{width: 16, height: 16}} />
+                <AppText style={styles.dialogMetaText}>{question.durationMinutes} mins</AppText>
+              </View>
+            </View>
+
+            <View style={{ gap: 8, marginTop: 4 }}>
+              <ActionButton 
+                title="FEEDBACK" 
+                bg="#FFFFFF" 
+                titleColor="#13BF69" 
+                shadowBg="rgba(0, 0, 0, 0.2)"
+                onPress={onFeedbackPress}
+              />
+              <ActionButton 
+                title="AI VS AI (LISTEN)" 
+                bg="#806B26" 
+                titleColor="#FFFFFF" 
+                shadowBg="#CCA814" 
+                icon={require('../../../../assets/images/headphones.png')} 
+              />
+            </View>
+          </View>
         </View>
       )}
     </View>
@@ -136,93 +260,190 @@ export const QuestionCard = memo(function QuestionCard({
 const styles = StyleSheet.create({
   outerWrapper: {
     marginBottom: spacing.m,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
-  pillShadow: {
-    position: 'absolute',
-    top: spacing.xxs,
-    left: 0,
-    right: 0,
-    bottom: -spacing.xxs,
-    borderRadius: spacing.pillRadius,
-  },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: spacing.pillRadius,
-    borderWidth: 2,
-    paddingVertical: spacing.xs,
-    paddingLeft: spacing.m,
-    paddingRight: spacing.xxs,
-    minHeight: 68,
-  },
-  leftSection: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  logoPlaceholder: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  logoText: {
-    color: colors.textSecondary,
-    fontSize: typography.sizes.xxs,
-    fontFamily: typography.fonts.inter.semiBold,
-  },
-  companyName: {
-    color: colors.textPrimary,
-    fontFamily: typography.fonts.inter.semiBold,
-  },
-  badge: {
-    width: spacing.badgeSize,
-    height: spacing.badgeSize,
-    borderRadius: spacing.badgeSize / 2,
+  layoutConstraints: {
+    width: BASE_W,
+    height: BASE_H + SHADOW_H,
     position: 'relative',
   },
-  badgeShadow: {
+  shadowBlock: {
     position: 'absolute',
-    top: spacing.xxs,
+    top: SHADOW_H,
     left: 0,
-    right: 0,
-    bottom: -spacing.xxs,
-    borderRadius: spacing.badgeSize / 2,
+    width: BASE_W,
+    height: BASE_H,
+    borderRadius: PILL_RADIUS,
   },
-  badgeInner: {
-    width: spacing.badgeSize,
-    height: spacing.badgeSize,
-    borderRadius: spacing.badgeSize / 2,
+  surfaceBlock: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: BASE_W,
+    height: BASE_H,
+    borderRadius: PILL_RADIUS,
+    overflow: 'hidden',
+  },
+  leftContent: {
+    position: 'absolute',
+    left: 24,
+    top: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  companyName: {
+    fontFamily: typography.fonts.inter.semiBold,
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#0B0B0D',
+  },
+  logoCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 1,
   },
-  badgeNumber: {
-    fontSize: 28,
+  logoInitial: {
+    fontSize: 11,
     fontFamily: typography.fonts.inter.bold,
+    color: '#48484A',
+  },
+  rightContainer: {
+    position: 'absolute',
+    right: 0,
+    top: 0, 
+    width: RIGHT_W,
+    height: RIGHT_W,
+    borderRadius: PILL_RADIUS,
+    overflow: 'hidden',
+    borderLeftWidth: 1.5,
+    borderLeftColor: 'rgba(255, 255, 255, 0.4)', 
+  },
+  numberCenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  outlinedNumberContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 60,
+    height: 60,
+    paddingTop: 8,
+  },
+  startTooltipWrapper: {
+    position: 'absolute',
+    top: -46,
+    right: 20,
+    alignItems: 'center',
+    zIndex: 10,
   },
   startTag: {
-    backgroundColor: colors.background,
-    borderRadius: spacing.xs,
-    paddingHorizontal: spacing.m,
-    paddingVertical: spacing.xxs,
-    marginLeft: spacing.xs,
-    shadowColor: palette.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: spacing.xxs,
-    elevation: 3,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderColor: '#E5E5EA',
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   startText: {
-    color: colors.cardActiveBadge,
-    fontSize: typography.sizes.s,
+    color: '#13BF69',
+    fontSize: 15,
     fontFamily: typography.fonts.inter.bold,
-    letterSpacing: 0.5,
+    letterSpacing: 0.51,
+  },
+  startTooltipArrow: {
+    width: 14,
+    height: 14,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E5E5EA',
+    borderRightWidth: 2,
+    borderBottomWidth: 2,
+    transform: [{ rotate: '45deg' }],
+    marginTop: -8.5,
+  },
+  // Expanded Dialog styles
+  expandedWrapper: {
+    width: '100%',
+    paddingHorizontal: 24,
+    marginTop: 6,
+    position: 'relative',
+    zIndex: -1,
+  },
+  arrowUp: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 12,
+    borderRightWidth: 12,
+    borderBottomWidth: 14,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#FFD033',
+    position: 'absolute',
+    top: -10, 
+  },
+  expandedBox: {
+    backgroundColor: '#FFD033',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    gap: 16,
+  },
+  dialogText: {
+    fontFamily: typography.fonts.inter.bold,
+    fontSize: 16,
+    color: '#1C1C1E',
+    lineHeight: 22,
+  },
+  dialogMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dialogMetaText: {
+    fontFamily: typography.fonts.inter.semiBold,
+    fontSize: 14,
+    color: '#48484A',
+  },
+  dialogTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  actionBtnWrapper: {
+    height: 44,
+    position: 'relative',
+    width: '100%',
+  },
+  actionBtnShadow: {
+    position: 'absolute',
+    top: 3, left: 0, right: 0, height: 41,
+    borderRadius: 12,
+  },
+  actionBtnSurface: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, height: 41,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  actionBtnTitle: {
+    fontFamily: typography.fonts.inter.bold,
+    fontSize: 15,
+    textTransform: 'uppercase',
+    letterSpacing: 0.51,
   },
 });

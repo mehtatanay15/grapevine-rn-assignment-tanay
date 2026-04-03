@@ -48,5 +48,55 @@
     "text": "Describe your approach to handling authentication tokens securely on mobile.",
     "durationMinutes": 2,
     "completedTodayCount": 453
+  },
+  {
+    "id": "q6",
+    "questionNumber": 6,
+    "companyId": "facebook",
+    "companyName": "Facebook",
+    "companyLogoUrl": null,
+    "text": "How do you build a highly available chat feature with read receipts?",
+    "durationMinutes": 4,
+    "completedTodayCount": 810
+  },
+  {
+    "id": "q7",
+    "questionNumber": 7,
+    "companyId": "amazon",
+    "companyName": "Amazon",
+    "companyLogoUrl": null,
+    "text": "Design a rate limiter for an API endpoint without overwhelming Redis.",
+    "durationMinutes": 3,
+    "completedTodayCount": 542
+  },
+  {
+    "id": "q8",
+    "questionNumber": 8,
+    "companyId": "facebook",
+    "companyName": "Facebook",
+    "companyLogoUrl": null,
+    "text": "Explain graph database traversal for friend recommendation systems.",
+    "durationMinutes": 4,
+    "completedTodayCount": 673
+  },
+  {
+    "id": "q9",
+    "questionNumber": 9,
+    "companyId": "microsoft",
+    "companyName": "Microsoft",
+    "companyLogoUrl": null,
+    "text": "How would you design a distributed cache layer for Office 365 syncing?",
+    "durationMinutes": 2,
+    "completedTodayCount": 390
+  },
+  {
+    "id": "q10",
+    "questionNumber": 10,
+    "companyId": "google",
+    "companyName": "Google",
+    "companyLogoUrl": null,
+    "text": "Design a scalable distributed file storage system like Google Drive.",
+    "durationMinutes": 5,
+    "completedTodayCount": 1120
   }
 ]
